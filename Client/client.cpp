@@ -31,13 +31,12 @@ public:
 	{
 		cout.put('>');
 		string cmd; getline(cin, cmd);
-		cmd = cmd + '\n';
-		sender.sendStr(cmd);
+		sender.sendStr(cmd + '\n');
 	}
 
 	virtual void receivePackagesHandler() override
 	{
-		string message = receiver.recvStr(1000);
+		string message = receiveCommand();
 		if(message.empty())
 		{
 			printf("Cerraron!\n");
@@ -45,8 +44,17 @@ public:
 		}
 		else 
 		{
-			cout << "Mensaje recibido: " << message << endl;			
+			cout << "\b[" << message << "]\n>";		
+			cout.flush();
 		}
+	}
+
+	string receiveCommand()
+	{
+		string cmd;
+		for(char c = receiver.recvStr(1)[0]; c!='\0' && c!='\n'; c = receiver.recvStr(1)[0])
+			cmd += c;
+		return cmd;
 	}
 };
 //////////////////////////////MAIN////////////////////////////////
