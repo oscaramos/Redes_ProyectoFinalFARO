@@ -1,0 +1,11 @@
+CONNECT 127.0.0.1 7777
+connect 127.0.0.1 8888
+START
+CREATE ("A", "Abaco")
+CREATE ("B", "Basico")
+LINK ("A", "B")
+EXPLORE ("C:/") 123
+
+
+
+gmaster.cpp -o master.exe -std=c++11 -pthread -Wall

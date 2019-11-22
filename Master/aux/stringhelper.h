@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include <initializer_list>
+#include <sstream>
 
 // Declaraciones
 std::string join(std::initializer_list<std::string> vec, char sep);
@@ -132,6 +133,46 @@ std::vector<std::string> tokenizeCommand(std::string s)
     }
     tokens.push_back(tok);
     return tokens;
+}
+
+
+std::vector<std::string> simpleTokenizer(std::string s)
+{
+    std::vector<std::string> vec;   
+    std::stringstream ss(s);
+    while(ss >> s)
+        vec.push_back(s);
+    return vec;
+}
+
+// Solo para comando del sistema del proyecto final
+// Basicamente del comando solo escoge los parametros tipos: "aa" 1
+// Osea los atrapados en comillas y los numeros, sin importar todo lo demas
+// Comando: EXPLORE ("C:/") 5    ---> tokenized{"C:/", "5"}
+std::vector<std::string> commandTokenizer(std::string cmd)
+{
+    std::vector<std::string> vec;
+    for(size_t i=0; i<cmd.size(); ++i)
+    {    
+        if(cmd[i] == '"')
+        {
+            std::string str;
+            i++;
+            while(i<cmd.size() && cmd[i] != '"')
+                str += cmd[i++];
+            vec.push_back(str);
+
+        }
+        if(isdigit(cmd[i]))
+        {
+            std::string dig;
+            dig += cmd[i++];
+            while(i<cmd.size() && isdigit(cmd[i]))
+                dig += cmd[i++];
+            vec.push_back(dig);
+        }
+    }
+    return vec;
 }
 
 

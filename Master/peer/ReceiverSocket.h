@@ -13,7 +13,16 @@ public:
         this->socketFD = socketFD;
     }
 
-    // TODO: si recibe 0 bytes, se cerro conexion
+    // no mas recvStr(1)[0], puede generar ***stack smashing***
+    char recvChar()
+    {
+        char c;
+        int cnt = recv(this->socketFD, &c, 1, 0);
+        if(cnt == 0) c = '\0';
+        return c;
+    }
+
+    // si recibe 0 bytes, se cerro conexion del otro lado
     // Llega a lo mucho x bytes
     std::string recvStr(int bytes)
     {

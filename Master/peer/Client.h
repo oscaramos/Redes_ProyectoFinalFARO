@@ -1,3 +1,6 @@
+#ifndef CLIENT_H
+#define CLIENT_H
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -14,45 +17,62 @@ class Client
 	static_assert(std::is_base_of<PeerConnection, T>::value, "T debe ser derivado de PeerConnection");
 private:
 	T* peerConn;
+	int socketFD;
 
 public:
 	Client() = default;
 
-	void newThread_connectToServer(std::string servIp, int servPort)
+	bool newThread_connectToServer(std::string servIp, int servPort)
 	{
-		thread th(&Client::connectToServer, this, servIp, servPort);
-		th.detach();
+		bool connectionOk = connectToServer(servIp, servPort);
+		if(connectionOk){
+			std::thread th(&Client::handlePeerConnection, this, this->socketFD);
+			th.detach();
+			return true;
+		}
+		else 
+			return false;
 	}
 
-	void connectToServer(std::string servIp, int servPort)
+	T* getInstanceOfPeerConnection()
+	{
+		return peerConn;
+	}
+
+private:
+	bool connectToServer(std::string servIp, int servPort)
 	{
 		try{
 			// Crear socket
-			int socketFD = Safe::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+			socketFD = Safe::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 			struct sockaddr_in servAddr = constructServerAddressStructure(servIp, servPort);
 
 			// Establecer conexion a server
 			Safe::connect(socketFD, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in));
-			printf("Cliente: conectado a servidor %s | puerto %d\n", servIp.c_str(), servPort);
-
-			// Comunicarse con server
-			peerConn = new T(socketFD);
-			std::thread t1(&T::sendPackages, peerConn);
-			std::thread t2(&T::receivePackages, peerConn);
-			t1.join();
-			t2.join();	
-
-			// Cerrar conexion con server
-			shutdown(socketFD, SHUT_RDWR);
-			close(socketFD);
-			printf("Cliente: Conexion con servidor finalizada\n");
+			printf("Cliente: conectado a servidor (%s:%d)\n", servIp.c_str(), servPort);
+			return true;
 		}
 		catch (std::string msg_error)
 		{
 			fprintf(stderr, "Error en Client.h\n");
 			perror(msg_error.c_str());
-			exit(EXIT_FAILURE);
+			return false;
 		}
+	}
+
+	void handlePeerConnection(int socketFD)
+	{
+		// Comunicarse con server
+		peerConn = new T(socketFD);
+		std::thread t1(&T::sendPackages, peerConn);
+		std::thread t2(&T::receivePackages, peerConn);
+		t1.join();
+		t2.join();	
+
+		// Cerrar conexion con server
+		shutdown(socketFD, SHUT_RDWR);
+		close(socketFD);
+		printf("Cliente: Conexion con servidor finalizada\n");
 	}
 
 	struct sockaddr_in constructServerAddressStructure(std::string servIp, int servPort)
@@ -65,8 +85,7 @@ public:
 		return servAddr;
 	}
 
-	T* getInstanceOfPeerConnection()
-	{
-		return peerConn;
-	}
+
 };
+
+#endif

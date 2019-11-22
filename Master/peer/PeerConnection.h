@@ -5,10 +5,6 @@
 #include "ReceiverSocket.h"
 #include "SenderSocket.h"
 
-#include <iostream>
-using namespace std;
-#define DBG(x) cout << #x << " = " << x << endl;
-
 class PeerConnection
 {
 protected:
