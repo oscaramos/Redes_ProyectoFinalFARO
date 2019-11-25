@@ -18,6 +18,8 @@ class Client
 private:
 	T* peerConn;
 	int socketFD;
+	std::string ip;
+	int port;
 
 public:
 	Client() = default;
@@ -26,6 +28,8 @@ public:
 	{
 		bool connectionOk = connectToServer(servIp, servPort);
 		if(connectionOk){
+			this->ip = servIp;
+			this->port = servPort;
 			std::thread th(&Client::handlePeerConnection, this, this->socketFD);
 			th.detach();
 			return true;
@@ -37,6 +41,16 @@ public:
 	T* getInstanceOfPeerConnection()
 	{
 		return peerConn;
+	}
+
+	std::string getIp()
+	{
+		return this->ip;
+	}
+
+	int getPort()
+	{
+		return this->port;
 	}
 
 private:
@@ -84,6 +98,7 @@ private:
 		Safe::inet_pton(AF_INET, servIp.c_str(), &servAddr.sin_addr);
 		return servAddr;
 	}
+
 
 
 };

@@ -48,7 +48,6 @@ int main(int argc, const char** argv)
     else {
     	printf("El servidor del Master no pudo iniciar correctamente\n");
     }
-    
     printf("Programa terminado\n");
     return 0;
 }

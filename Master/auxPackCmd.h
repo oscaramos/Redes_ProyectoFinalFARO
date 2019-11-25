@@ -4,6 +4,7 @@
 #include <iostream>
 #include "globals.h"
 #include "aux/stringhelper.h"
+#include "SlaveConnection.h"
 using namespace std;
 
 class VerifierCmd
@@ -20,6 +21,8 @@ public:
 		else if(word == "DELETE") return CMD_DELETE;
 		else if(word == "UNLINK") return CMD_UNLINK;
 		else if(word == "UPDATE") return CMD_UPDATE;
+		else if(word == "EXPLORE")return CMD_EXPLORE;
+		else if(word == "SELECT") return CMD_SELECT;
 		else return CMD_ERROR; 
 	}
 
@@ -55,10 +58,27 @@ public:
 			case CMD_DELETE: pack = processDelete(tokens); break;
 			case CMD_UNLINK: pack = processUnlink(tokens); break;
 			case CMD_UPDATE: pack = processUpdate(tokens); break;
+			case CMD_EXPLORE:pack = processExplore(tokens);break;
+			case CMD_SELECT: pack = processSelect(tokens); break;
 			default: break;
 		}
 		return pack;
 	}
+
+	string createPackListOfSlavesIps(std::vector< Client<SlaveConnection>* > slaves)
+	{
+		string pack = join({"0", intWithZeros(slaves.size(), 2)});
+		for(Client<SlaveConnection>* slave: slaves)
+			pack += " " + join({pkgF(slave->getIp(), 2)});
+		return pack;
+	}
+
+	string createPackPing()
+	{
+		return "p";
+	}
+
+
 
 private:
 	string processCreate(vector<string> tokens)
@@ -95,6 +115,20 @@ private:
 		return join({"5", pkgF(oldpk, 2), pkgF(newpk, 2)});
 	}
 
+	string processExplore(vector<string> tokens)
+	{
+		string pk = tokens[0];
+		int prof = stoi(tokens[1]);
+		return join({"6", pkgF(pk, 2), intWithZeros(prof, 2)});
+	}
+
+	string processSelect(vector<string> tokens)
+	{
+		string pk = tokens[0];
+		int prof = stoi(tokens[1]);
+		return join({"7", pkgF(pk, 2), intWithZeros(prof, 2)});
+	}
+
 	// Solo para acortar codigo
 	string pkgF(string field, int lendigits)
 	{
@@ -114,6 +148,8 @@ public:
 			case CMD_CREATE: pk = tokens[0]; break;
 			case CMD_DELETE: pk = tokens[0]; break;
 			case CMD_UPDATE: pk = tokens[0]; break;
+			case CMD_EXPLORE:pk = tokens[0]; break;
+			case CMD_SELECT: pk = tokens[0]; break;
 			default: break; 
 		}
 		return pk;

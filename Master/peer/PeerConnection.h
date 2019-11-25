@@ -67,6 +67,7 @@ public:
 			closeConnection();
 	}
 
+protected:
 	void closeConnection()
 	{
 		this->isActiveConnection = false;
