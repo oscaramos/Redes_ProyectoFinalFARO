@@ -1,5 +1,5 @@
-#ifndef SLAVECONNECTION_H
-#define SLAVECONNECTION_H
+#ifndef SLAVECLIENTCONNECTION_H
+#define SLAVECLIENTCONNECTION_H
 #include <iostream>
 #include <queue>
 #include "peer/Client.h"
@@ -36,7 +36,7 @@ public:
 	bool receivePackTrueOrFalse()
 	{
 		char firstchar = receiver.recvChar();
-		receiver.ignore(1);
+		cout << "SlaveClientConnection(T|F): firstchar = " << firstchar << endl;
 		if(firstchar == '\0'){
 			printf("Conexion con slaves cerrada\n");
 			closeConnection();
@@ -45,8 +45,8 @@ public:
 
 		string pack;
 		typeSlavePack typepack = verifierpack.getTypeOfPack(firstchar);
-		if(PCKSLAVE_TRUE) return true;
-		else              return false;
+		if(typepack==PCKSLAVE_TRUE) return true;
+		else                        return false;
 	}
 };
 

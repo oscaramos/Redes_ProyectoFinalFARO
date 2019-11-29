@@ -1,6 +1,8 @@
 #include <sys/socket.h>
 #include <string>
 #include <cmath>
+#include <iostream> // quitar al terminar Debug
+using namespace std; // tambien
 
 class ReceiverSocket
 {
@@ -13,25 +15,42 @@ public:
         this->socketFD = socketFD;
     }
 
-    // no mas recvStr(1)[0], puede generar ***stack smashing***
-    char recvChar()
+    // Para recibir paquetes tipo: "1 5 Oscar 7 Ramirez"
+    std::string recvField(int bytes)
     {
-        char c;
-        int cnt = recv(this->socketFD, &c, 1, 0);
-        if(cnt == 0) c = '\0';
-        return c;
+        size_t size = recvInt(bytes);
+        ignore(1);
+        std::string field = recvStr(size);
+        return field;
     }
 
     // si recibe 0 bytes, se cerro conexion del otro lado
     // Llega a lo mucho x bytes
     std::string recvStr(int bytes)
     {
-        std::string s(bytes, '\0');
-        int cnt = recv(this->socketFD, (char*)s.c_str(), bytes, 0);
-        s = s.substr(0, cnt);
+        std::string s;
+        //cout << "Receiver: Recibiendo string" << endl;
+        for(int i=0; i<bytes; ++i)
+            s += recvChar();
+        //cout << endl << "Receiver: Termino de recibir" << endl;
         return s;
     }
 
+    int recvInt(int bytes)
+    {
+        return stoi(recvStr(bytes));
+    }
+
+    char recvChar()
+    {
+        char c;
+        int cnt = recv(this->socketFD, &c, 1, 0);
+        if(cnt == 0) c = '\0';
+        //cout << c; // Debug
+        return c;
+    }
+
+    // obsoleto?
     // Se bloquea cuando llega un paquete chiquito
     std::string recvBigStr(int bytes)
     {
@@ -45,16 +64,7 @@ public:
         return ans;
     }
 
-    // Para recibir paquetes tipo: "1 5 Oscar 7 Ramirez"
-    std::string recvField(int bytes)
-    {
-        std::string size = recvStr(bytes);
-        ignore(1);
-        std::string field = recvStr(stoi(size));
-        return field;
-    }
-
-    // La estructura DEBE ser serializable(puro int, char[]. no std::string, std::vector)
+    // La estructura DEBE ser serializable(puro tipo primitivo: int, char[]. no std::string, std::vector)
     template <typename T> 
     T recvStruct()
     {

@@ -1,6 +1,8 @@
 #include <sys/socket.h>
 #include <string>
 #include <cmath>
+// #include <iostream> // debug
+// using namespace std;
 
 class ReceiverSocket
 {
@@ -42,7 +44,7 @@ public:
         char c;
         int cnt = recv(this->socketFD, &c, 1, 0);
         if(cnt == 0) c = '\0';
-        //cout << c << endl; // Debug
+        //cout << "char " << c << endl; // Debug
         return c;
     }
 

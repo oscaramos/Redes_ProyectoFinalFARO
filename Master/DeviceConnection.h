@@ -2,6 +2,7 @@
 #define DEVICECONNECTION_H 
 #include <iostream>
 #include <vector>
+#include <mutex>
 #include "peer/Server.h"
 #include "peer/Client.h"
 #include "SlaveConnection.h"
@@ -191,10 +192,14 @@ void DeviceConnection::keepAlive()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+mutex mutex_sender;
 
 void DeviceConnection::sendPackToSlave(int slaveid, string pack)
 {
-	slaves[slaveid]->getInstanceOfPeerConnection()->sendPack(pack);
+	mutex_sender.lock();
+		cout << "sendPackToSlave: envio paquete["<<pack<<"]" << endl;
+		slaves[slaveid]->getInstanceOfPeerConnection()->sendPack(pack);
+	mutex_sender.unlock();
 }
 
 void DeviceConnection::sendMessageToClient(string msg)
@@ -220,10 +225,9 @@ string DeviceConnection::receiveCommandFromClient()
 
 void DeviceConnection::broadcastAllSlaves(string pack)
 {
-	for(int i=0; i<k; ++i){ 
+	for(int i=0; i<k; ++i)
 		if(isAlive[i])
-			slaves[i]->getInstanceOfPeerConnection()->sendPack(pack);
-	}
+			sendPackToSlave(i, pack);
 }
 
 

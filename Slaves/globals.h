@@ -14,6 +14,7 @@ enum typeMasterPack{PCKMASTER_START,
 			        PCKMASTER_UPDATE, 
 			        PCKMASTER_EXPLORE,
 			        PCKMASTER_SELECT,
+			        PCKMASTER_PING,
 			        PCKMASTER_ERROR};
 
 enum typeSlavePack{PCKSLAVE_EXIST,
@@ -24,6 +25,7 @@ enum typeSlavePack{PCKSLAVE_EXIST,
                    PCKSLAVE_ERROR};
 
 int port_master, port_slave;
+int slaveid = 0; // debug
 
 Database database;
 

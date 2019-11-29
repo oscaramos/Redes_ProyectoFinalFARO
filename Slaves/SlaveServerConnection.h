@@ -1,5 +1,5 @@
-#ifndef SLAVECONNECTION_H
-#define SLAVECONNECTION_H
+#ifndef SLAVESERVERCONNECTION_H
+#define SLAVESERVERCONNECTION_H
 #include <iostream>
 #include <queue>
 #include "peer/Client.h"
@@ -28,7 +28,7 @@ public:
 	virtual void receivePackagesHandler() override
 	{
 		char firstchar = receiver.recvChar();
-		receiver.ignore(1);
+		cout << "SlaveServerConnection: firstchar = " << firstchar << endl;
 		if(firstchar == '\0'){
 			printf("Conexion con slaves cerrada\n");
 			closeConnection();
@@ -39,21 +39,25 @@ public:
 		typeSlavePack typepack = verifierpack.getTypeOfPack(firstchar);
 		switch(typepack)
 		{
-			case PCKSLAVE_EXIST: pack=processExist();
-			case PCKSLAVE_ERROR: pack=processError();
+			case PCKSLAVE_EXIST: pack=processExist(); break;
+			case PCKSLAVE_ERROR: pack=processError(); break;
 		}
+		cout << "SlaveServerConnection: envio paquete = ["<<pack<<"]" << endl;
 		sender.sendStr(pack);
 	}
 
-	// ejemplo: 1 03 C:/
-	// estructura: [1, 2, var]
 	string processExist();
 	string processError();
 };
 
+// ejemplo: 1 03 C:/
+// estructura: [1, 2, var]
 string SlaveServerConnection::processExist()
 {
+	cout << "processExist: Inicia" << endl;
+	receiver.ignore(1);
 	string pk = receiver.recvField(2);
+	cout << "processExist: PK = " << pk << endl;
 	if(database.existNode(pk))
 		return creatorpack.createPack(PCKSLAVE_TRUE);
 	else 
@@ -62,7 +66,7 @@ string SlaveServerConnection::processExist()
 
 string SlaveServerConnection::processError()
 {
-	cout << "Error!!, paquete no reconocido" << endl;
+	cout << "SlaveServerConnection: error paquete no reconocido" << endl;
 	exit(0);
 }
 

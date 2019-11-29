@@ -20,6 +20,7 @@ public:
 			case '4': return PCKMASTER_UNLINK;
 			case '5': return PCKMASTER_UPDATE;
 			case '6': return PCKMASTER_EXPLORE;
+			case 'p': return PCKMASTER_PING;
 		}
 		return PCKMASTER_ERROR; 
 	}

@@ -16,7 +16,7 @@
 #include "auxPackCmd.h"
 #include "MasterConnection.h"
 #include "SlaveServerConnection.h"
-
+#include "SlaveClientConnection.h"
 
 
 using namespace std;
@@ -26,19 +26,24 @@ int main(int argc, const char** argv)
 {
 	if(argc < 3)
 	{
-		printf("Parameters: ./slave.exe <PORT_SRVMASTER> <PORT_SRVSLAVES>\n");
+		printf("Parameters: ./slave.exe <PORT_SRVMASTER> <PORT_SRVSLAVES> [<SLAVE_ID>]\n");
 		return 0;
 	}
-	else
+	if(argc >=3)
 	{
 		port_master = atoi(argv[1]);
 		port_slave = atoi(argv[2]);
+	}
+	if(argc >= 4)
+	{
+		slaveid = atoi(argv[3]);
+		cout << "Fase de debug" << endl;
 	}
 
     Server<MasterConnection> masterconn;
     Server<SlaveServerConnection> slaveconn;
     bool isopen_master = masterconn.newThread_turnOnServer(port_master);
-    bool isopen_slave = slaveconn.newThread_turnOnServer(port_slave);
+    bool isopen_slave = slaveconn.newThread_turnOnServer(port_slave+slaveid); // slaveid es de debug
     if(isopen_master && isopen_slave){
     	sleep(100000); // Con signal se desactiva	
     }

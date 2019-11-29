@@ -40,12 +40,13 @@ public:
 	virtual void receivePackagesHandler() override
 	{
 		char firstchar = receiver.recvChar();
-		receiver.ignore(1);
+		// NUNCA PONER UN .IGNORE(1) AQUI, JAMAS
 		if(firstchar == '\0'){
 			printf("Conexion con usuario cerrada\n");
 			closeConnection();
 			return;
 		}
+		cout << "first char = " << firstchar << endl;
 
 		string message;
 		typeMasterPack typepack = verifierpack.getTypeOfPack(firstchar);
@@ -59,10 +60,13 @@ public:
 			// case PCKMASTER_UPDATE: processOnePk (cmd,  typepack,  PACK_UNICAST); break;
 			// case PCKMASTER_EXPLORE:processOnePk (cmd,  typepack,  PACK_UNICAST); break;
 			// case PCKMASTER_SELECT: processOnePk (cmd,  typepack,  PACK_UNICAST); break;
+			case PCKMASTER_PING:   message=processPing(); break;
 			case PCKMASTER_ERROR:  message=processError(); break;
 		}
-		message = intWithZeros(message.size(), 3) + message;
+		message = intWithZeros(message.size(), 3) + " " + message;
+		cout << "Send master message = " << message << endl;
 		sendMessageToMaster(message);
+		cout << endl;
 	}
 		
 private:
@@ -72,6 +76,7 @@ private:
 	string processLink();
 	string processDelete();
 	string processUnlink();
+	string processPing();
 	string processError();
 
 	// comunicaciones con Master y Slaves
@@ -80,7 +85,11 @@ private:
 	bool receivePackTrueOrFalseFromSlave(int slaveid);
 
 	// comunicaciones internas Slaves y Slaves
-	bool existsNode(string pk);
+	bool existsNodeInSlaves(string pk);
+
+	// base de datos aqui
+	bool existsNodeHere(string pk);
+	bool existLinkHere(string pk1, string pk2);
 
 	// funciones auxiliares
 	int chooseSlave(string pk);
@@ -94,18 +103,25 @@ private:
 // estructura: [1, 2 [2 var]+]
 string MasterConnection::processStart()
 {
+	receiver.ignore(1);
 	// recibir ips_slaves
-	int lenlist = receiver.recvInt(2); receiver.ignore(1);
+	cout << "START: iniciado" << endl;
+	int lenlist = receiver.recvInt(2);
+	cout << "START: son " << lenlist << " ips" << endl;
 	for(int i=0; i<lenlist; ++i){
+		receiver.ignore(1);
 		string ip_slave = receiver.recvField(2);	
+		cout << "START: Conectando con ip " << ip_slave << " y puerto " << port_slave << endl; // slaveid es de debug
 		// conectar con slaves
 		Client<SlaveClientConnection>* client = new Client<SlaveClientConnection>();
-		bool isconnected = client->newThread_connectToServer(ip_slave, port_slave);
+		bool isconnected = client->newThread_connectToServer(ip_slave, port_slave+i); // es temporal el +1, quitar en produccion 
 		if(!isconnected)
-			cout << "conexion fallida con: " << ip_slave << endl;
-		slavesclients.push_back(client);
+			cout << "START: conexion fallida con: " << ip_slave << endl;
+		else
+			slavesclients.push_back(client);
 	}
 	k = lenlist;
+	cout << "START: terminado" << endl;
 	return "p"; 
 }
 
@@ -113,26 +129,58 @@ string MasterConnection::processStart()
 // estructura: [1,2 var,3 var] 
 string MasterConnection::processCreate()
 {
+	cout << "Create: iniciado" << endl;
+	receiver.ignore(1);
 	string pk = receiver.recvField(2);
+	receiver.ignore(1);
 	string content = receiver.recvField(3);
-	if(!existsNode(pk)){
+	if(!existsNodeHere(pk)){
+		cout << "Create: creando nodo" << endl;
 		database.createNode(pk, content);
 		return "THE NODE WAS CREATED!";
 	}
-	else
+	else{
+		cout << "Create: no crea nodo porque ya existe" << endl;
 		return "THE NODE ALREADY EXISTS";
+	}
 }
 
 // ejemplo: [2 03 C:\ 12 C:\proyectos]
 // estructura: [1, 2 var, 2 var]
 string MasterConnection::processLink()
 {
+	cout << "Link: iniciado" << endl;
+	receiver.ignore(1);
 	string pk1 = receiver.recvField(2);
+	receiver.ignore(1);
 	string pk2 = receiver.recvField(2);
-	if(existsNode(pk1) && existsNode(pk2)){
-		if(existsNode(pk1)) database.linkRelationship(pk1, pk2);
-		else                database.linkRelationship(pk2, pk1);
-		return "THE NODES WERE LINKED!";
+	cout << "Link: pk1="<<pk1<<" pk2="<<pk2<< endl;
+	if(existsNodeInSlaves(pk1) && existsNodeInSlaves(pk2)){
+		bool isLinked = false;
+		if(existsNodeHere(pk1)){
+			if(!existLinkHere(pk1, pk2)){
+				cout << "Link: linkeando nodos" << endl;
+				database.linkRelationship(pk1, pk2);
+				isLinked = true;
+			}
+			else {
+				cout << "Link: ya existe link" << endl;
+			}
+		}
+		if(existsNodeHere(pk2)){
+			if(!existLinkHere(pk2, pk1)){
+				cout << "Link: linkeando nodos" << endl;
+				database.linkRelationship(pk2, pk1);
+				isLinked = true;
+			}
+			else {
+				cout << "Link: ya existe link" << endl;
+			}
+		}
+		if(isLinked)
+			return "THE NODES WERE LINKED!";
+		else 
+			return "THE LINK ALREADY EXISTS!";
 	}
 	else{
 		return "SOME NODES DON’T EXIST";
@@ -143,8 +191,9 @@ string MasterConnection::processLink()
 // estructura: [1, 2 var]
 string MasterConnection::processDelete()
 {
+	receiver.ignore(1);
 	string pk = receiver.recvField(2);
-	if(existsNode(pk)){
+	if(existsNodeHere(pk)){
 		// primero borro todas las relaciones
 		// for(string rel: database.getAllRelationships(pk))
 		// {
@@ -154,7 +203,7 @@ string MasterConnection::processDelete()
 		return "THE NODE WAS DELETED!";
 	}
 	else
-		return "THE NODE ALREADY EXISTS";
+		return "THE NODE DON'T EXIST";
 }
 
 
@@ -162,18 +211,50 @@ string MasterConnection::processDelete()
 // estructura: [1, 2 var, 2 var]
 string MasterConnection::processUnlink()
 {
+	cout << "Unlink: iniciado" << endl;
+	receiver.ignore(1);
 	string pk1 = receiver.recvField(2);
+	receiver.ignore(1);
 	string pk2 = receiver.recvField(2);
-	if(existsNode(pk1) && existsNode(pk2)){
-		if(existsNode(pk1)) database.unlinkRelationship(pk1, pk2);
-		else                database.unlinkRelationship(pk2, pk1);
-		return "THE NODES WERE LINKED!";
+	cout << "Unlink: pk1="<<pk1<<" pk2="<<pk2<< endl;
+	if(existsNodeInSlaves(pk1) && existsNodeInSlaves(pk2)){
+		bool isUnlinked = false;
+		if(existsNodeHere(pk1)){
+			if(existLinkHere(pk1, pk2)){
+				cout << "Unlink: deslinkeando nodos" << endl;
+				database.unlinkRelationship(pk1, pk2);
+				isUnlinked = true;
+			}
+			else {
+				cout << "Unlink: no existe link" << endl;
+			}
+		}
+		if(existsNodeHere(pk2)){
+			if(existLinkHere(pk2, pk1)){
+				cout << "Unlink: deslinkeando nodos" << endl;
+				database.unlinkRelationship(pk2, pk1);
+				isUnlinked = true;
+			}
+			else {
+				cout << "Unlink: no existe link" << endl;
+			}
+		}
+		if(isUnlinked)
+			return "THE NODES WERE UNLINKED!";
+		else 
+			return "THE LINK DON'T EXIST!";
 	}
 	else{
 		return "SOME NODES DON’T EXIST";
 	}
 }
 
+// ejemplo: [p]
+// estructura: [cmd] 
+string MasterConnection::processPing()
+{
+	return "p";
+}
 
 
 string MasterConnection::processError()
@@ -203,14 +284,31 @@ bool MasterConnection::receivePackTrueOrFalseFromSlave(int slaveid)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-bool MasterConnection::existsNode(string pk)
+// TODO: falta multicast
+bool MasterConnection::existsNodeInSlaves(string pk)
 {
 	string pack = creatorpack.createPack(PCKSLAVE_EXIST, {pk});
+	cout << "ExistNode: envio paquete ["<<pack<<"]" << endl;
 	int slaveid = chooseSlave(pk);
+	cout << "ExistNode: al slave " << slaveid << endl;
 	sendPackToSlave(slaveid, pack);
 	bool exist = receivePackTrueOrFalseFromSlave(slaveid);
+	cout << "ExistNode: exist = " << exist << endl;
 	return exist;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool MasterConnection::existsNodeHere(string pk)
+{
+	return database.existNode(pk);
+}
+
+bool MasterConnection::existLinkHere(string pk1, string pk2)
+{
+	return database.existLink(pk1, pk2);
 }
 
 

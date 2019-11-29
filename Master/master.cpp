@@ -32,14 +32,7 @@ int main(int argc, const char** argv)
 	{
 		port = atoi(argv[1]);
 	}
-	if(argc >= 3)
-	{
-		cout << "UNITARY TESTING" << endl;
-		CreatorPack cpk;
-		string pack = cpk.createPack(CMD_CREATE, "CREATE (\"C:\", \"size: 12, files: 2\")");
-		DBG(pack);
-	}
-
+	
     Server<DeviceConnection> receiver;
     bool isServerOpened = receiver.newThread_turnOnServer(port);
     if(isServerOpened){

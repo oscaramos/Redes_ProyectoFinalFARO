@@ -9,7 +9,6 @@ using namespace std;
 class SlaveConnection: public PeerConnection
 {
 private:
-	bool onCreate;
 	bool pingResponse;
 	queue<string> queue_msgs;
 
@@ -17,16 +16,12 @@ private:
 public:
 	SlaveConnection(int socketFD): PeerConnection(socketFD)
 	{
-	    this->onCreate = true;
+	    ;
 	}
 
 	virtual void sendPackagesHandler() override
 	{
-		if(onCreate)
-		{
-			onCreate = false;
-			sender.sendStr("OK, me conecto contigo\n");
-		}
+		this->disableSender = true;
 	}
 
 	// Recuerda, no debe recibir mensajes entre '\n' 
