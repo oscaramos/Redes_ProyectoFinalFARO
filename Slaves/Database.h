@@ -70,6 +70,11 @@ public:
 	{
 		return relationships[pk];
 	}
+
+	string getContent(string pk)
+	{
+		return nodes[pk];
+	}
 };
 
 #endif

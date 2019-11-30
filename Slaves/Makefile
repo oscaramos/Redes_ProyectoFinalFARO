@@ -7,7 +7,7 @@ SERVER_HEADERS = ${PEER_HEADERS} Server.h
 AUX_HEADERS := $(addprefix aux/, $(AUX_HEADERS))
 CLIENT_HEADERS := $(addprefix peer/, $(CLIENT_HEADERS))
 SERVER_HEADERS := $(addprefix peer/, $(SERVER_HEADERS))
-MY_HEADERS = auxPackCmd.h Database.h MasterConnection.h SlaveClientConnection.h SlaveServerConnection.h globals.h
+MY_HEADERS = Database.h MasterConnection.h SlaveClientConnection.h SlaveServerConnection.h SlaveConnections.h CreatorPacks.h VerifierPacks.h globals.h
 
 all: slave.exe
 	@echo Terminado!!

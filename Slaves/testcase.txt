@@ -5,8 +5,14 @@ START
 
 CREATE("A", "ABACO")
 CREATE("B", "BASICO")
+CREATE("C", "CLASICO")
 LINK("A", "B")
-UNLINK("A, "B")
+LINK("B", "C")
+EXPLORE("A") 1
+UNLINK("A", "B")
+DELETE("A")
+DELETE("B")
+
 
 
 // SLAVES

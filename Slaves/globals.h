@@ -1,8 +1,7 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
-
-
 #include "Database.h"
+#include "SlaveConnections.h"
 #define DBG(x) cout << #x << " = " << x << endl;
 #define DBGVEC(v) cout << #v << " = "; for(const auto&vv: v) cout << vv << ", "; cout << endl;
 
@@ -25,8 +24,21 @@ enum typeSlavePack{PCKSLAVE_EXIST,
                    PCKSLAVE_ERROR};
 
 int port_master, port_slave;
-int slaveid = 0; // debug
 
 Database database;
+SlaveConnections slavesconn;
+
+template<typename T>
+vector<T> concatVectors(vector<T> v1, vector<T> v2)
+{
+	vector<T> ans(v1.begin(), v1.end());
+	ans.insert(ans.end(), v2.begin(), v2.end());
+	return ans;
+}
+
+// debug
+int slaveid = 0; 
+bool debugMode = false;
+//
 
 #endif

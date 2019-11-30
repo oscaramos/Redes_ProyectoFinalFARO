@@ -13,7 +13,6 @@
 #include "aux/SimulatorUserInput.h"
 #include "aux/stringhelper.h"
 #include "globals.h"
-#include "auxPackCmd.h"
 #include "MasterConnection.h"
 #include "SlaveServerConnection.h"
 #include "SlaveClientConnection.h"
@@ -37,6 +36,7 @@ int main(int argc, const char** argv)
 	if(argc >= 4)
 	{
 		slaveid = atoi(argv[3]);
+		debugMode = true;
 		cout << "Fase de debug" << endl;
 	}
 
