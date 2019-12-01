@@ -1,14 +1,25 @@
-// MASTER
-CONNECT 127.0.0.1 7777
+
+// real
+CONNECT 192.168.196.210 9999
+CONNECT 192.168.196.136 9999
+START
+
+// virtual
 CONNECT 127.0.0.1 8888
+CONNECT 127.0.0.1 9999
 START
 
 CREATE("A", "ABACO")
 CREATE("B", "BASICO")
 CREATE("C", "CLASICO")
+CREATE("D", "DADO")
+CREATE("E", "EXPRESSO")
 LINK("A", "B")
-LINK("B", "C")
+LINK("A", "C")
+LINK("B", "D")
+LINK("B", "E")
 EXPLORE("A") 1
+SELECT("A") 1
 UNLINK("A", "B")
 DELETE("A")
 DELETE("B")
@@ -16,3 +27,30 @@ DELETE("B")
 
 
 // SLAVES
+CONNECT 127.0.0.1 8888
+CONNECT 127.0.0.1 9999
+START
+CREATE("A", "size: 42kb, files : 3")
+CREATE("B", "size: 35kb, files : 2")
+CREATE("C", "size: 70kb, files : 2")
+CREATE("D", "size: 79kb, files : 2")
+CREATE("E", "size: 63kb, files : 2")
+CREATE("file.F", "size: 42kb")
+CREATE("file.G", "size: 35kb")
+CREATE("file.H", "size: 70kb")
+CREATE("file.I", "size: 79kb")
+CREATE("file.J", "size: 63kb")
+CREATE("file.K", "size: 63kb")
+CREATE("file.L", "size: 63kb")
+LINK ("A")--("B")
+LINK ("A")--("C")
+LINK ("A")--("file.I")
+LINK ("B")--("D")
+LINK ("B")--("file.H")
+LINK ("C")--("E")
+LINK ("C")--("file.J")
+LINK ("D")--("file.F")
+LINK ("D")--("file.G")
+LINK ("E")--("file.K")
+LINK ("E")--("file.L")
+EXPLORE("A") 2

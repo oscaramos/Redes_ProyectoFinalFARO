@@ -1,5 +1,9 @@
+#ifndef SENDERSOCKET_H
+#define SENDERSOCKET_H
+
 #include <sys/socket.h>
 #include <string>
+#include <iostream>
 
 class SenderSocket
 {
@@ -23,3 +27,5 @@ public:
         send(this->socketFD, (T*)&mystruct, sizeof(T), 0); // TODO: Reconocer cuando recv == 0, conexion cerrada
     }
 };
+
+#endif

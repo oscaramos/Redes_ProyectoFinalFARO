@@ -10,10 +10,11 @@ public: // TODO: QUITAR PUBLIC
 	int k; // k = slaves.size();
 	vector< Client<SlaveClientConnection>* > slavesclients;
 	vector<bool> isAlive; // TODO
+	int myslaveid = -1; // refiere al slaveid de esta maquina
 
 public:
 	void sendPackToSlave(int slaveid, string pack)
-	{
+	{	
 		slavesclients[slaveid]->getInstanceOfPeerConnection()->sendPack(pack);
 	}
 	bool receivePackTrueOrFalseFromSlave(int slaveid)

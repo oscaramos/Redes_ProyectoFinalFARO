@@ -3,27 +3,22 @@
 #include <iostream>
 #include <vector>
 #include <map>
-#include "peer/Server.h"
-#include "peer/Client.h"
 #include "SlaveConnections.h"
-#include "globals.h"
-#include "VerifierPacks.h"
-#include "CreatorPacks.h"
+#include "../globals.h"
+#include "../Pack/VerifierPacks.h"
+#include "../Pack/Packager.h"
+#include "../Pack/UnpackagerMaster.h"
 using namespace std;
 
 class MasterConnection: public PeerConnection
 {
 public:
 	VerifierMasterPack verifierpack;
-	CreatorSlavePack creatorpack;
+	Packager packager;
+	UnpackagerMaster unpackager;
 
 public:
-	
-// grafo
-
-
-public:
-	MasterConnection(int socketFD): PeerConnection(socketFD)
+	MasterConnection(int socketFD): PeerConnection(socketFD), unpackager(socketFD)
 	{
 
 	}
@@ -35,17 +30,16 @@ public:
 
 	virtual void receivePackagesHandler() override
 	{
-		char firstchar = receiver.recvChar();
-		// NUNCA PONER UN .IGNORE(1) AQUI, JAMAS!!!
-		if(firstchar == '\0'){
+		char packid = receiver.recvChar(); // NUNCA PONER UN .IGNORE(1) AQUI, JAMAS!!!
+		if(packid == '\0'){
 			printf("Conexion con usuario cerrada\n");
 			closeConnection();
 			return;
 		}
-		cout << "first char = " << firstchar << endl;
+		cout << "packid = " << packid << endl;
 
 		string message;
-		typeMasterPack typepack = verifierpack.getTypeOfPack(firstchar);
+		typeMasterPack typepack = verifierpack.getTypeOfPack(packid);
 		switch(typepack)
 		{
 			case PCKMASTER_START:  message=processStart();  break;
@@ -97,25 +91,33 @@ private:
 // estructura: [1, 2 [2 var]+]
 string MasterConnection::processStart()
 {
-	receiver.ignore(1);
-	// recibir ips_slaves
 	cout << "START: iniciado" << endl;
-	int lenlist = receiver.recvInt(2);
-	cout << "START: son " << lenlist << " ips" << endl;
-	for(int i=0; i<lenlist; ++i){
-		receiver.ignore(1);
-		string ip_slave = receiver.recvField(2);	
-		cout << "START: Conectando con ip " << ip_slave << " y puerto " << port_slave << endl; // slaveid es de debug
-		// conectar con slaves
-		Client<SlaveClientConnection>* client = new Client<SlaveClientConnection>();
-		bool isconnected = client->newThread_connectToServer(ip_slave, port_slave+(debugMode?i:0)); // es temporal el +1, quitar en produccion 
-		if(!isconnected)
-			cout << "START: conexion fallida con: " << ip_slave << endl;
-		else
-			slavesconn.slavesclients.push_back(client);
-	}
-	slavesconn.k = lenlist;
+	vector<string> ip_slaves;
+	ip_slaves = unpackager.unpackageStart(); 
+	cout << "START: son " << ip_slaves.size() << " ips" << endl;
+	slavesconn.k = ip_slaves.size();
 	cout << "START: k = " << slavesconn.k << endl;
+	for(unsigned int slaveid=0; slaveid<ip_slaves.size(); ++slaveid)
+	{
+		string ip = ip_slaves[slaveid];
+		cout << "START: Conectando con ip " << ip << " y puerto " << port_slave << endl;
+		Client<SlaveClientConnection>* client = new Client<SlaveClientConnection>();
+		bool isconnected = client->newThread_connectToServer(ip, port_slave+(debugMode?slaveid:0)); 
+		if(isconnected){
+			slavesconn.slavesclients.push_back(client);
+		}
+		else{
+			cout << "START: conexion fallida con: " << ip << endl;
+			exit(0); // termino el programa!!
+		}
+	}
+
+	for(unsigned int slaveid=0; slaveid<ip_slaves.size(); ++slaveid)
+	{
+		string pack = packager.packageStart(slaveid);
+		cout << "START: envio paquete a slaveid=" << slaveid << " contenido: " << pack << endl;
+		slavesconn.sendPackToSlave(slaveid, pack);
+	}
 	cout << "START: terminado" << endl;
 	return "p"; 
 }
@@ -125,10 +127,9 @@ string MasterConnection::processStart()
 string MasterConnection::processCreate()
 {
 	cout << "Create: iniciado" << endl;
-	receiver.ignore(1);
-	string pk = receiver.recvField(2);
-	receiver.ignore(1);
-	string content = receiver.recvField(3);
+	string pk, content;
+	tie(pk, content) = unpackager.unpackageCreate();
+	cout << "Create: pk=" << pk << " content=" << content << endl;
 	if(!existsNodeHere(pk)){
 		cout << "Create: creando nodo" << endl;
 		database.createNode(pk, content);
@@ -145,10 +146,8 @@ string MasterConnection::processCreate()
 string MasterConnection::processLink()
 {
 	cout << "Link: iniciado" << endl;
-	receiver.ignore(1);
-	string pk1 = receiver.recvField(2);
-	receiver.ignore(1);
-	string pk2 = receiver.recvField(2);
+	string pk1, pk2;
+	tie(pk1, pk2) = unpackager.unpackageLink();
 	cout << "Link: pk1="<<pk1<<" pk2="<<pk2<< endl;
 	if(existsNodeInSlaves(pk1) && existsNodeInSlaves(pk2)){
 		bool isLinked = false;
@@ -186,8 +185,8 @@ string MasterConnection::processLink()
 // estructura: [1, 2 var]
 string MasterConnection::processDelete()
 {
-	receiver.ignore(1);
-	string pk = receiver.recvField(2);
+	string pk = unpackager.unpackageDelete();
+	cout << "Delete: pk=" << pk << endl;
 	if(existsNodeHere(pk)){
 		// primero borro todas las relaciones
 		// for(string rel: database.getAllRelationships(pk))
@@ -207,10 +206,8 @@ string MasterConnection::processDelete()
 string MasterConnection::processUnlink()
 {
 	cout << "Unlink: iniciado" << endl;
-	receiver.ignore(1);
-	string pk1 = receiver.recvField(2);
-	receiver.ignore(1);
-	string pk2 = receiver.recvField(2);
+	string pk1, pk2;
+	tie(pk1, pk2) = unpackager.unpackageUnlink();
 	cout << "Unlink: pk1="<<pk1<<" pk2="<<pk2<< endl;
 	if(existsNodeInSlaves(pk1) && existsNodeInSlaves(pk2)){
 		bool isUnlinked = false;
@@ -250,15 +247,15 @@ string MasterConnection::processUnlink()
 string MasterConnection::processExplore()
 {
 	cout << "MasterConnection::Explore: iniciado" << endl;
-	string message;
-	receiver.ignore(1); string pk = receiver.recvField(2);
-	receiver.ignore(1); int prof = receiver.recvInt(2);
+	string pk; int prof;
+	tie(pk, prof) = unpackager.unpackageExplore();
 	cout << "MasterConnection::Explore: pk="<<pk<<" prof="<<prof<<endl;
 
+	string message;
 	vector<pair<int,string>> explored = exploreInSlaves(pk, prof);
 	reverse(explored.begin(), explored.end());
 	for(pair<int,string> p: explored){
-		cout << "MasterConnection::DATA: rawprof="<<p.first<<" pk="<<p.second<<endl;
+		cout << "MasterConnection::DATAExplore: rawprof="<<p.first<<" pk="<<p.second<<endl;
 		message += string(2*(prof-p.first), '-') + ">" + p.second + "\n";
 	}
 	message.erase(message.end()-1); // para evitar falso positivo de cerrado al cliente
@@ -270,15 +267,15 @@ string MasterConnection::processExplore()
 string MasterConnection::processSelect()
 {
 	cout << "MasterConnection::Select: iniciado" << endl;
-	string message;
-	receiver.ignore(1); string pk = receiver.recvField(2);
-	receiver.ignore(1); int prof = receiver.recvInt(2);
+	string pk; int prof;
+	tie(pk, prof) = unpackager.unpackageSelect();
 	cout << "MasterConnection::Select: pk="<<pk<<" prof="<<prof<<endl;
 
+	string message;
 	vector<pair<int,pair<string,string>>> explored = selectInSlaves(pk, prof); // retorna pair<prof, pk, content>
 	reverse(explored.begin(), explored.end());
 	for(pair<int,pair<string,string>> p: explored){
-		cout << "MasterConnection::DATA: rawprof="<<p.first<<" pk="<<p.second.first<<" content="<<p.second.second<<endl;
+		cout << "MasterConnection::DATASelect: rawprof="<<p.first<<" pk="<<p.second.first<<" content="<<p.second.second<<endl;
 		message += string(2*(prof-p.first), '-') + ">" + p.second.first + "\t("+p.second.second+")" + "\n";
 	}
 	message.erase(message.end()-1); // para evitar falso positivo de cerrado al cliente, quito la ultima '\n'
@@ -298,7 +295,6 @@ string MasterConnection::processError()
 	return "INCORRECT FORMAT";
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -313,9 +309,9 @@ void MasterConnection::sendMessageToMaster(string msg)
 // TODO: falta multicast
 bool MasterConnection::existsNodeInSlaves(string pk)
 {
-	string pack = creatorpack.createPackExist(PCKSLAVE_EXIST, pk);
-	cout << "ExistNode: envio paquete ["<<pack<<"]" << endl;
+	string pack = packager.packageExist(pk);
 	int slaveid = slavesconn.chooseSlave(pk);
+	cout << "ExistNode: envio paquete ["<<pack<<"]" << endl;
 	cout << "ExistNode: al slave " << slaveid << endl;
 	slavesconn.sendPackToSlave(slaveid, pack);
 	bool exist = slavesconn.receivePackTrueOrFalseFromSlave(slaveid);
@@ -323,38 +319,25 @@ bool MasterConnection::existsNodeInSlaves(string pk)
 	return exist;
 }
 
-
-vector<pair<int,string>> MasterConnection::exploreInSlaves(string pk1, int prof)
+vector<pair<int,string>> MasterConnection::exploreInSlaves(string pk, int prof)
 {
-	string pack = creatorpack.createPackExploreRequest(pk1, prof);
+	string pack = packager.packageExploreRequest(pk, prof, {});
+	int slaveid = slavesconn.chooseSlave(pk);
 	cout << "MasterConnection::exploreInSlaves: envio paquete ["<<pack<<"]" << endl;
-
-	vector<pair<int,string>> explored;
-	vector<string> relations = database.getAllRelationships(pk1);
-	for(string pk2: relations){
-		int slaveid = slavesconn.chooseSlave(pk2);
-		cout << "MasterConnection::exploreInSlaves: pk2="<<pk2<<" slaveid="<<slaveid<<endl;
-		slavesconn.sendPackToSlave(slaveid, pack);
-		vector<pair<int,string>> response = slavesconn.receivePackExplore(slaveid);
-		explored = concatVectors(explored, response);
-	}
+	cout << "MasterConnection::exploreInSlaves: pk="<<pk<<" slaveid="<<slaveid<<endl;
+	slavesconn.sendPackToSlave(slaveid, pack);
+	vector<pair<int,string>> explored = slavesconn.receivePackExplore(slaveid);
 	return explored;
 }
 
-vector<pair<int,pair<string,string>>> MasterConnection::selectInSlaves(string pk1, int prof)
+vector<pair<int,pair<string,string>>> MasterConnection::selectInSlaves(string pk, int prof)
 {
-	string pack = creatorpack.createPackSelectRequest(pk1, prof);
+	string pack = packager.packageSelectRequest(pk, prof, {});
+	int slaveid = slavesconn.chooseSlave(pk);
 	cout << "MasterConnection::selectInSlaves: envio paquete ["<<pack<<"]" << endl;
-
-	vector<pair<int,pair<string,string>>> explored;
-	vector<string> relations = database.getAllRelationships(pk1);
-	for(string pk2: relations){
-		int slaveid = slavesconn.chooseSlave(pk2);
-		cout << "MasterConnection::selectInSlaves: pk2="<<pk2<<" slaveid="<<slaveid<<endl;
-		slavesconn.sendPackToSlave(slaveid, pack);
-		vector<pair<int,pair<string,string>>> response = slavesconn.receivePackSelect(slaveid);
-		explored = concatVectors(explored, response);
-	}
+	cout << "MasterConnection::selectInSlaves: pk="<<pk<<" slaveid="<<slaveid<<endl;
+	slavesconn.sendPackToSlave(slaveid, pack);
+	vector<pair<int,pair<string,string>>> explored = slavesconn.receivePackSelect(slaveid);
 	return explored;
 }
 

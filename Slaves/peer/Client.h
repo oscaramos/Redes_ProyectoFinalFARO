@@ -8,6 +8,7 @@
 #include <string.h>
 #include <string>
 #include <thread>
+#include <unistd.h>
 #include "../aux/Safe.h"
 #include "PeerConnection.h" 
 
@@ -30,6 +31,7 @@ public:
 		if(connectionOk){
 			this->ip = servIp;
 			this->port = servPort;
+			this->peerConn = new T(socketFD);
 			std::thread th(&Client::handlePeerConnection, this, this->socketFD);
 			th.detach();
 			return true;
@@ -78,7 +80,6 @@ private:
 	void handlePeerConnection(int socketFD)
 	{
 		// Comunicarse con server
-		peerConn = new T(socketFD);
 		std::thread t1(&T::sendPackages, peerConn);
 		std::thread t2(&T::receivePackages, peerConn);
 		t1.join();

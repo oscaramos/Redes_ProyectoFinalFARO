@@ -1,32 +1,43 @@
-// Autor: Oscar Daniel Ramos Ramirez
+// Disenatior, codificador, tester: Oscar Daniel Ramos Ramirez
+// UCSP 2019-2
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 #include <iostream>
-#include <thread>
-#include <termios.h>
-#include <chrono>
-#include <fstream>
 #include "peer/Client.h"
 #include "peer/Server.h"
-#include "aux/SimulatorUserInput.h"
-#include "aux/stringhelper.h"
-#include "globals.h"
-#include "MasterConnection.h"
-#include "SlaveServerConnection.h"
-#include "SlaveClientConnection.h"
+#include "Connections/MasterConnection.h"
+#include "Connections/SlaveServerConnection.h"
 
 
 using namespace std;
 
+void argvHandler(int argc, const char** argv);
+
 //////////////////////////////MAIN////////////////////////////////
 int main(int argc, const char** argv)
+{
+	argvHandler(argc, argv);
+    Server<MasterConnection> masterconn;
+    Server<SlaveServerConnection> slaveconn;
+    bool isopen_master = masterconn.newThread_turnOnServer(port_master);
+    bool isopen_slave = slaveconn.newThread_turnOnServer(port_slave+slaveid); // slaveid es de debug
+    if(isopen_master && isopen_slave){
+    	sleep(100000); // Paro este thread. Con signal se desactiva	esto
+    }
+    else {
+	    if(!isopen_master) printf("El servidor para el Master no pudo iniciar\n");
+	    if(!isopen_slave)  printf("El servidor para los Slave no pudo iniciar\n");
+    }
+    printf("Programa terminado\n");
+    return 0;
+}
+
+//////////////////////////////FUNCTIONS////////////////////////////////
+void argvHandler(int argc, const char** argv)
 {
 	if(argc < 3)
 	{
 		printf("Parameters: ./slave.exe <PORT_SRVMASTER> <PORT_SRVSLAVES> [<SLAVE_ID>]\n");
-		return 0;
+		exit(0);
 	}
 	if(argc >=3)
 	{
@@ -37,20 +48,6 @@ int main(int argc, const char** argv)
 	{
 		slaveid = atoi(argv[3]);
 		debugMode = true;
-		cout << "Fase de debug" << endl;
+		printf("Fase de debug\n");
 	}
-
-    Server<MasterConnection> masterconn;
-    Server<SlaveServerConnection> slaveconn;
-    bool isopen_master = masterconn.newThread_turnOnServer(port_master);
-    bool isopen_slave = slaveconn.newThread_turnOnServer(port_slave+slaveid); // slaveid es de debug
-    if(isopen_master && isopen_slave){
-    	sleep(100000); // Con signal se desactiva	
-    }
-    else {
-	    if(!isopen_master) printf("El servidor para el Master no pudo iniciar\n");
-	    if(!isopen_slave)  printf("El servidor para los Slave no pudo iniciar\n");
-    }
-    printf("Programa terminado\n");
-    return 0;
 }

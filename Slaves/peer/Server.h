@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <thread>
+#include <unistd.h>
 #include "../aux/Safe.h"
 #include "PeerConnection.h"
   
@@ -75,7 +76,7 @@ private:
             socklen_t clntAddrLen = sizeof(clntAddr);
             int connectFD = Safe::accept(socketFD, (struct sockaddr*)&clntAddr, &clntAddrLen);
             printf("Servidor: nuevo cliente\n");
-            printClientIpPort(clntAddr);
+            printIpPort(clntAddr);
 
             peerConn = new T(connectFD);
             std::thread th1(&T::sendPackages, peerConn);
@@ -100,15 +101,14 @@ private:
         return servAddr;
     }
 
-    void printClientIpPort(sockaddr_in clntAddr)
+    void printIpPort(sockaddr_in addr)
     {
         char clntIp[INET_ADDRSTRLEN]; 
-        if(inet_ntop(AF_INET, &clntAddr.sin_addr.s_addr, clntIp, INET_ADDRSTRLEN))
-            printf("(%s:%d)\n", clntIp, ntohs(clntAddr.sin_port));
+        if(inet_ntop(AF_INET, &addr.sin_addr.s_addr, clntIp, INET_ADDRSTRLEN))
+            printf("(%s:%d)\n", clntIp, ntohs(addr.sin_port));
         else
             printf("sin ip y puerto disponibles\n");
     }
-
 };
 
 #endif

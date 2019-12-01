@@ -1,3 +1,6 @@
+#ifndef RECEIVERSOCKET_H
+#define RECEIVERSOCKET_H
+
 #include <sys/socket.h>
 #include <string>
 #include <cmath>
@@ -77,3 +80,5 @@ public:
         recv(this->socketFD, trash, bytes, 0);
     }    
 };
+
+#endif

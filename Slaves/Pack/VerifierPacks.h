@@ -1,14 +1,14 @@
 #ifndef VERIFIERPACKS_H
 #define VERIFIERPACKS_H
 
-#include "globals.h"
+#include "../globals.h"
 
 class VerifierMasterPack
 {
 public:	
-	typeMasterPack getTypeOfPack(char firstchar)
+	typeMasterPack getTypeOfPack(char packid)
 	{
-		switch(firstchar)
+		switch(packid)
 		{
 			case '0': return PCKMASTER_START;
 			case '1': return PCKMASTER_CREATE;
@@ -28,10 +28,11 @@ public:
 class VerifierSlavePack
 {
 public:	
-	typeSlavePack getTypeOfPack(char firstchar)
+	typeSlavePack getTypeOfPack(char packid)
 	{
-		switch(firstchar)
+		switch(packid)
 		{
+			case '0': return PCKSLAVE_START;
 			case '1': return PCKSLAVE_EXIST;
 			case '2': return PCKSLAVE_EXPLORE;
 			case '3': return PCKSLAVE_SELECT;
