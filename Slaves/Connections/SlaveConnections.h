@@ -47,6 +47,11 @@ public:
 	    hash_value = abs(hash_value)%k;
 		return hash_value;
 	}
+
+	int nextSlaveid(int slaveid)
+	{
+		return (slaveid+1)%k;
+	}
 };
 
 #endif

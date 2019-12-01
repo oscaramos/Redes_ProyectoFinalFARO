@@ -2,6 +2,7 @@
 #define SLAVESERVERCONNECTION_H
 #include <iostream>
 #include <queue>
+#include <thread>
 #include "SlaveConnections.h"
 #include "../globals.h"
 #include "../Pack/VerifierPacks.h"
@@ -36,21 +37,27 @@ public:
 			closeConnection();
 			return;
 		}
-		cout << "SlaveServerConnection: packid = " << packid;
+		cout << "SlaveServerConnection: packid = " << packid << endl;
 		typeSlavePack typepack = verifierpack.getTypeOfPack(packid);
 		switch(typepack)
 		{
-			case PCKSLAVE_START:   {thread th(&SlaveServerConnection::processStart, this, unpackager.unpackageStart());           th.detach();} break;
-			case PCKSLAVE_EXIST:   {thread th(&SlaveServerConnection::processExist, this, unpackager.unpackageExist());           th.detach();} break;
-			case PCKSLAVE_EXPLORE: {thread th(&SlaveServerConnection::processExplore, this, unpackager.unpackageExploreRequest(), false);th.detach();} break;
-			case PCKSLAVE_SELECT:  {thread th(&SlaveServerConnection::processSelect, this, unpackager.unpackageSelectRequest(), false);  th.detach();} break;
+			case PCKSLAVE_START:    {thread th(&SlaveServerConnection::processStart, this, unpackager.unpackageStart());                  th.detach();} break;
+			case PCKSLAVE_CREATE:   {thread th(&SlaveServerConnection::processCreate, this, unpackager.unpackageCreate());                th.detach();} break;
+			case PCKSLAVE_EXIST:    {thread th(&SlaveServerConnection::processExist, this, unpackager.unpackageExist());                  th.detach();} break;
+			case PCKSLAVE_LINK:     {thread th(&SlaveServerConnection::processLink, this, unpackager.unpackageLink());                    th.detach();} break;
+			case PCKSLAVE_UNLINK:   {thread th(&SlaveServerConnection::processUnlink, this, unpackager.unpackageUnlink());                th.detach();} break;
+			case PCKSLAVE_QEXPLORE: {thread th(&SlaveServerConnection::processExplore, this, unpackager.unpackageExploreRequest(), false);th.detach();} break;
+			case PCKSLAVE_QSELECT:  {thread th(&SlaveServerConnection::processSelect, this, unpackager.unpackageSelectRequest(), false);  th.detach();} break;
 			case PCKSLAVE_ERROR:   processError();   break;
-			default: break;
+			case PCKSLAVE_SEXPLORE: case PCKSLAVE_SSELECT: case PCKSLAVE_TRUE: case PCKSLAVE_FALSE: break; // ignorados por el compilador, y pertenecen al SlaveClientConnection.h
 		}
 	}
 
 	void processStart(int slaveid);
+	void processCreate(tuple<string,string> args);
 	void processExist(string pk);
+	void processLink(tuple<string,string> args);
+	void processUnlink(tuple<string,string> args);
 	vector<pair<int, string>>               processExplore(tuple<string, int, vector<string>> args, bool localinvoc);
 	vector<pair<int, pair<string, string>>> processSelect(tuple<string, int, vector<string>> args, bool localinvoc);
 	void processError();
@@ -65,6 +72,15 @@ void SlaveServerConnection::processStart(int myslaveid)
 	cout << "processStart: Termina" << endl;
 }
 
+void SlaveServerConnection::processCreate(tuple<string,string> args)
+{
+	cout << "processCreate: Inicia" << endl;
+	string pk, content; 
+	tie(pk, content) = args;
+	cout << "processCreate: PK = " << pk << " content=" << content << endl;
+	database.createNode(pk, content);
+}
+
 void SlaveServerConnection::processExist(string pk)
 {
 	cout << "processExist: Inicia" << endl;
@@ -76,9 +92,26 @@ void SlaveServerConnection::processExist(string pk)
 	sender.sendStr(pack);
 }
 
-// ejemplo: 2 03 C:/ 05 02 01 C 02 C:
-// estructura: [cmd, len_pk, pk, prof, len_list, [len_pk, pk]+]
-// longitudes: [1, 2 var, 2, 2 [2, var]+] 
+void SlaveServerConnection::processLink(tuple<string,string> args)
+{
+	cout << "processLink: Inicia" << endl;
+	string pk1, pk2;
+	tie(pk1, pk2) = args;
+	cout << "processLink: PK1="<<pk1<<" PK2="<<pk2<< endl;
+	database.linkRelationship(pk1, pk2);
+}
+
+
+void SlaveServerConnection::processUnlink(tuple<string,string> args)
+{
+	cout << "processUnlink: Inicia" << endl;
+	string pk1, pk2;
+	tie(pk1, pk2) = args;
+	cout << "processUnlink: PK1="<<pk1<<" PK2="<<pk2<< endl;
+	database.unlinkRelationship(pk1, pk2);
+}
+
+
 vector<pair<int, string>> SlaveServerConnection::processExplore(tuple<string, int, vector<string>> args, bool localinvoc)
 {
 	cout << "SlaveServerConnection::processExplore: Inicia" << endl;
@@ -124,10 +157,6 @@ vector<pair<int, string>> SlaveServerConnection::processExplore(tuple<string, in
 	return explored;
 }
 
-// casi igual que el explore
-// ejemplo: 4 03 C:/ 05 02 01 C 02 C:
-// estructura: [cmd, len_pk, pk, prof, len_list, [len_pk, pk]+]
-// longitudes: [1, 2 var, 2, 2 [2, var]+] 
 vector<pair<int, pair<string, string>>> SlaveServerConnection::processSelect(tuple<string, int, vector<string>> args, bool localinvoc)
 {
 	cout << "SlaveServerConnection::processSelect: Inicia" << endl;

@@ -3,7 +3,10 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <future>
+#include <any>
 #include "SlaveConnections.h"
+#include "../peer/Client.h"
 #include "../globals.h"
 #include "../Pack/VerifierPacks.h"
 #include "../Pack/Packager.h"
@@ -30,44 +33,63 @@ public:
 
 	virtual void receivePackagesHandler() override
 	{
-		char packid = receiver.recvChar(); // NUNCA PONER UN .IGNORE(1) AQUI, JAMAS!!!
+		char packid = receiver.recvChar();
 		if(packid == '\0'){
 			printf("Conexion con usuario cerrada\n");
 			closeConnection();
 			return;
 		}
 		cout << "packid = " << packid << endl;
-
-		string message;
 		typeMasterPack typepack = verifierpack.getTypeOfPack(packid);
 		switch(typepack)
 		{
-			case PCKMASTER_START:  message=processStart();  break;
-			case PCKMASTER_CREATE: message=processCreate(); break;
-			case PCKMASTER_LINK:   message=processLink();   break;
-			case PCKMASTER_DELETE: message=processDelete ();break;
-			case PCKMASTER_UNLINK: message=processUnlink(); break;
-			// case PCKMASTER_UPDATE: processOnePk (cmd,  typepack,  PACK_UNICAST); break;
-			case PCKMASTER_EXPLORE:message=processExplore(); break;
-			case PCKMASTER_SELECT: message=processSelect(); break;
-			case PCKMASTER_PING:   message=processPing(); break;
-			case PCKMASTER_ERROR:  message=processError(); break;
+			case PCKMASTER_START:  {thread th(&MasterConnection::responseMaster, this, typepack, unpackager.unpackageStart()); th.detach(); break;}
+			case PCKMASTER_CREATE: {thread th(&MasterConnection::responseMaster, this, typepack, unpackager.unpackageCreate()); th.detach(); break;}
+			case PCKMASTER_LINK:   {thread th(&MasterConnection::responseMaster, this, typepack, unpackager.unpackageLink()); th.detach(); break;}
+			case PCKMASTER_DELETE: {thread th(&MasterConnection::responseMaster, this, typepack, unpackager.unpackageDelete()); th.detach(); break;}			
+			case PCKMASTER_UNLINK: {thread th(&MasterConnection::responseMaster, this, typepack, unpackager.unpackageUnlink()); th.detach(); break;}
+			case PCKMASTER_UPDATE: {thread th(&MasterConnection::responseMaster, this, typepack, unpackager.unpackageUpdate()); th.detach(); break;}
+			case PCKMASTER_EXPLORE:{thread th(&MasterConnection::responseMaster, this, typepack, unpackager.unpackageExplore()); th.detach(); break;}
+			case PCKMASTER_SELECT: {thread th(&MasterConnection::responseMaster, this, typepack, unpackager.unpackageSelect()); th.detach(); break;}
+			case PCKMASTER_PING:   {thread th(&MasterConnection::responseMaster, this, typepack, unpackager.unpackagePing()); th.detach(); break;}
+			case PCKMASTER_ERROR:  {thread th(&MasterConnection::responseMaster, this, typepack, unpackager.unpackageError()); th.detach(); break;}
 		}
+		cout << "receivePackagesHandler::Continuing_listening" << endl;
+	}
+		
+private:
+	void responseMaster(typeMasterPack typepack, any args)
+	{
+		future<string> futuremessage;
+		switch(typepack)
+		{
+			case PCKMASTER_START:  futuremessage=async(&MasterConnection::processStart,this,  any_cast<vector<string>>(args));  break;
+			case PCKMASTER_CREATE: futuremessage=async(&MasterConnection::processCreate, this, any_cast<tuple<string,string>>(args)); break;
+			case PCKMASTER_LINK:   futuremessage=async(&MasterConnection::processLink, this, any_cast<tuple<string,string>>(args));   break;
+			case PCKMASTER_DELETE: futuremessage=async(&MasterConnection::processDelete, this, any_cast<string>(args));break;
+			case PCKMASTER_UNLINK: futuremessage=async(&MasterConnection::processUnlink, this, any_cast<tuple<string, string>>(args)); break;
+			case PCKMASTER_UPDATE: futuremessage=async(&MasterConnection::processUpdate, this, any_cast<tuple<string, string>>(args)); break;
+			case PCKMASTER_EXPLORE:futuremessage=async(&MasterConnection::processExplore, this, any_cast<tuple<string, int>>(args)); break;
+			case PCKMASTER_SELECT: futuremessage=async(&MasterConnection::processSelect, this, any_cast<tuple<string, int>>(args)); break;
+			case PCKMASTER_PING:   futuremessage=async(&MasterConnection::processPing, this); break;
+			case PCKMASTER_ERROR:  futuremessage=async(&MasterConnection::processError, this); break;
+		}
+		string message = futuremessage.get();
 		message = intWithZeros(message.size(), 3) + " " + message;
 		cout << "Send master message = " << message << endl;
 		sendMessageToMaster(message);
 		cout << endl;
 	}
-		
-private:
+
 	// Los casos de uso implementados
-	string processStart();
-	string processCreate();
-	string processLink();
-	string processDelete();
-	string processUnlink();
-	string processExplore();
-	string processSelect();
+	string processStart(vector<string> ip_slaves);
+	string processCreate(tuple<string, string> args);
+	string processLink(tuple<string, string> args);
+	string processDelete(string pk1);
+	string processUnlink(tuple<string, string> args);
+	string processUpdate(tuple<string, string> args);
+	string processExplore(tuple<string, int> args);
+	string processSelect(tuple<string, int> args);
 	string processPing();
 	string processError();
 
@@ -75,11 +97,15 @@ private:
 	void sendMessageToMaster(string msg);
 
 	// comunicaciones internas Slaves y Slaves
+	void startSlaveid(int slaveid);
+	void createNode(string pk, string content);
+	void linkRelationship(string pk1, string pk2);
+	void unlinkRelationship(string pk1, string pk2);
 	bool existsNodeInSlaves(string pk);
 	vector<pair<int,string>> exploreInSlaves(string pk, int prof);
 	vector<pair<int,pair<string,string>>> selectInSlaves(string pk, int prof);
 
-	// base de datos aqui
+	// base de datos local
 	bool existsNodeHere(string pk);
 	bool existLinkHere(string pk1, string pk2);
 };
@@ -87,13 +113,10 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// ejemplo: [0 02 08 10.0.0.1 08 10.0.0.2]
-// estructura: [1, 2 [2 var]+]
-string MasterConnection::processStart()
+
+string MasterConnection::processStart(vector<string> ip_slaves)
 {
 	cout << "START: iniciado" << endl;
-	vector<string> ip_slaves;
-	ip_slaves = unpackager.unpackageStart(); 
 	cout << "START: son " << ip_slaves.size() << " ips" << endl;
 	slavesconn.k = ip_slaves.size();
 	cout << "START: k = " << slavesconn.k << endl;
@@ -112,88 +135,65 @@ string MasterConnection::processStart()
 		}
 	}
 
-	for(unsigned int slaveid=0; slaveid<ip_slaves.size(); ++slaveid)
-	{
-		string pack = packager.packageStart(slaveid);
-		cout << "START: envio paquete a slaveid=" << slaveid << " contenido: " << pack << endl;
-		slavesconn.sendPackToSlave(slaveid, pack);
+	for(unsigned int slaveid=0; slaveid<ip_slaves.size(); ++slaveid){
+		startSlaveid(slaveid);
 	}
 	cout << "START: terminado" << endl;
 	return "p"; 
 }
 
-// ejemplo: [1 03 C:\ 018 size: 12, files: 2]
-// estructura: [1,2 var,3 var] 
-string MasterConnection::processCreate()
+
+string MasterConnection::processCreate(tuple<string, string> args)
 {
 	cout << "Create: iniciado" << endl;
-	string pk, content;
-	tie(pk, content) = unpackager.unpackageCreate();
+	string pk, content; tie(pk, content) = args;
 	cout << "Create: pk=" << pk << " content=" << content << endl;
 	if(!existsNodeHere(pk)){
-		cout << "Create: creando nodo" << endl;
 		database.createNode(pk, content);
 		return "THE NODE WAS CREATED!";
 	}
 	else{
-		cout << "Create: no crea nodo porque ya existe" << endl;
 		return "THE NODE ALREADY EXISTS";
 	}
 }
 
-// ejemplo: [2 03 C:\ 12 C:\proyectos]
-// estructura: [1, 2 var, 2 var]
-string MasterConnection::processLink()
+string MasterConnection::processLink(tuple<string, string> args)
 {
 	cout << "Link: iniciado" << endl;
-	string pk1, pk2;
-	tie(pk1, pk2) = unpackager.unpackageLink();
+	string pk1, pk2; tie(pk1, pk2) = args;
 	cout << "Link: pk1="<<pk1<<" pk2="<<pk2<< endl;
 	if(existsNodeInSlaves(pk1) && existsNodeInSlaves(pk2)){
 		bool isLinked = false;
 		if(existsNodeHere(pk1)){
 			if(!existLinkHere(pk1, pk2)){
-				cout << "Link: linkeando nodos" << endl;
 				database.linkRelationship(pk1, pk2);
 				isLinked = true;
-			}
-			else {
-				cout << "Link: ya existe link" << endl;
 			}
 		}
 		if(existsNodeHere(pk2)){
 			if(!existLinkHere(pk2, pk1)){
-				cout << "Link: linkeando nodos" << endl;
 				database.linkRelationship(pk2, pk1);
 				isLinked = true;
 			}
-			else {
-				cout << "Link: ya existe link" << endl;
-			}
 		}
-		if(isLinked)
-			return "THE NODES WERE LINKED!";
-		else 
-			return "THE LINK ALREADY EXISTS!";
+		if(isLinked) return "THE NODES WERE LINKED!";
+		else         return "THE LINK ALREADY EXISTS!";
 	}
 	else{
 		return "SOME NODES DON’T EXIST";
 	}
 }
 
-// ejemplo: [3 12 C:/proyectos]
-// estructura: [1, 2 var]
-string MasterConnection::processDelete()
+string MasterConnection::processDelete(string pk1)
 {
-	string pk = unpackager.unpackageDelete();
-	cout << "Delete: pk=" << pk << endl;
-	if(existsNodeHere(pk)){
-		// primero borro todas las relaciones
-		// for(string rel: database.getAllRelationships(pk))
-		// {
-		// 	;
-		// }
-		database.deleteNode(pk);
+	cout << "Delete: pk=" << pk1 << endl;
+	if(existsNodeHere(pk1)){
+		vector<string> relationships = database.getAllRelationships(pk1);
+		for(string pk2: relationships){
+			database.unlinkRelationship(pk1, pk2);
+			unlinkRelationship(pk2, pk1);
+		}
+		database.deleteNode(pk1);
 		return "THE NODE WAS DELETED!";
 	}
 	else
@@ -201,34 +201,23 @@ string MasterConnection::processDelete()
 }
 
 
-// ejemplo: [4 03 C:\ 12 C:\proyectos]
-// estructura: [1, 2 var, 2 var]
-string MasterConnection::processUnlink()
+string MasterConnection::processUnlink(tuple<string, string> args)
 {
 	cout << "Unlink: iniciado" << endl;
-	string pk1, pk2;
-	tie(pk1, pk2) = unpackager.unpackageUnlink();
+	string pk1, pk2; tie(pk1, pk2) = args;
 	cout << "Unlink: pk1="<<pk1<<" pk2="<<pk2<< endl;
 	if(existsNodeInSlaves(pk1) && existsNodeInSlaves(pk2)){
 		bool isUnlinked = false;
 		if(existsNodeHere(pk1)){
 			if(existLinkHere(pk1, pk2)){
-				cout << "Unlink: deslinkeando nodos" << endl;
 				database.unlinkRelationship(pk1, pk2);
 				isUnlinked = true;
-			}
-			else {
-				cout << "Unlink: no existe link" << endl;
 			}
 		}
 		if(existsNodeHere(pk2)){
 			if(existLinkHere(pk2, pk1)){
-				cout << "Unlink: deslinkeando nodos" << endl;
 				database.unlinkRelationship(pk2, pk1);
 				isUnlinked = true;
-			}
-			else {
-				cout << "Unlink: no existe link" << endl;
 			}
 		}
 		if(isUnlinked)
@@ -242,15 +231,30 @@ string MasterConnection::processUnlink()
 }
 
 
-// ejemplo: [6 03 C:\ 05]
-// estructura: [1, 2 var, 2]
-string MasterConnection::processExplore()
+string MasterConnection::processUpdate(tuple<string, string> args)
+{
+	cout << "Update: iniciado" << endl;
+	string old_pk, new_pk; tie(old_pk, new_pk) = args;
+	cout << "Update: oldpk="<<old_pk<<" new_pk="<<new_pk<< endl;
+	if(!existsNodeHere(old_pk))    return "THE OLD NODE DON'T EXIT";
+	if(existsNodeInSlaves(new_pk)) return "THE NEW NODE ALREADY EXIST";
+	createNode(new_pk, database.getContent(old_pk));
+	vector<string> relationships = database.getAllRelationships(old_pk);
+	for(string pk2: relationships){
+		unlinkRelationship(pk2, old_pk);
+		linkRelationship(pk2, new_pk);
+		linkRelationship(new_pk, pk2);
+	}
+	database.deleteNode(old_pk);
+	return "THE NODE WAS UPDATED!";
+}
+
+
+string MasterConnection::processExplore(tuple<string, int> args)
 {
 	cout << "MasterConnection::Explore: iniciado" << endl;
-	string pk; int prof;
-	tie(pk, prof) = unpackager.unpackageExplore();
+	string pk; int prof; tie(pk,  prof) = args;
 	cout << "MasterConnection::Explore: pk="<<pk<<" prof="<<prof<<endl;
-
 	string message;
 	vector<pair<int,string>> explored = exploreInSlaves(pk, prof);
 	reverse(explored.begin(), explored.end());
@@ -258,19 +262,16 @@ string MasterConnection::processExplore()
 		cout << "MasterConnection::DATAExplore: rawprof="<<p.first<<" pk="<<p.second<<endl;
 		message += string(2*(prof-p.first), '-') + ">" + p.second + "\n";
 	}
-	message.erase(message.end()-1); // para evitar falso positivo de cerrado al cliente
+	message.erase(message.end()-1);
 	return message;
 }
 
-// ejemplo: [7 03 C:\ 05]
-// estructura: [1, 2 var, 2]
-string MasterConnection::processSelect()
+
+string MasterConnection::processSelect(tuple<string, int> args)
 {
 	cout << "MasterConnection::Select: iniciado" << endl;
-	string pk; int prof;
-	tie(pk, prof) = unpackager.unpackageSelect();
+	string pk; int prof; tie(pk,  prof) = args;
 	cout << "MasterConnection::Select: pk="<<pk<<" prof="<<prof<<endl;
-
 	string message;
 	vector<pair<int,pair<string,string>>> explored = selectInSlaves(pk, prof); // retorna pair<prof, pk, content>
 	reverse(explored.begin(), explored.end());
@@ -278,12 +279,10 @@ string MasterConnection::processSelect()
 		cout << "MasterConnection::DATASelect: rawprof="<<p.first<<" pk="<<p.second.first<<" content="<<p.second.second<<endl;
 		message += string(2*(prof-p.first), '-') + ">" + p.second.first + "\t("+p.second.second+")" + "\n";
 	}
-	message.erase(message.end()-1); // para evitar falso positivo de cerrado al cliente, quito la ultima '\n'
+	message.erase(message.end()-1);
 	return message;
 }
 
-// ejemplo: [p]
-// estructura: [cmd] 
 string MasterConnection::processPing()
 {
 	return "p";
@@ -306,7 +305,54 @@ void MasterConnection::sendMessageToMaster(string msg)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// TODO: falta multicast
+void MasterConnection::startSlaveid(int slaveid)
+{
+	string pack = packager.packageStart(slaveid);
+	cout << "startSlaveid: envio paquete ["<<pack<<"]" << endl;
+	cout << "startSlaveid: al slave " << slaveid << endl;
+	slavesconn.sendPackToSlave(slaveid, pack);
+}
+
+
+void MasterConnection::createNode(string pk, string content)
+{
+	string pack = packager.packageCreate(pk, content);
+	int slaveid = slavesconn.chooseSlave(pk);
+	cout << "createNode: envio paquete ["<<pack<<"]" << endl;
+	cout << "createNode: al slave " << slaveid << endl;
+	slavesconn.sendPackToSlave(slaveid, pack);
+	slaveid = slavesconn.nextSlaveid(slaveid);
+	cout << "createNode: envio paquete ["<<pack<<"]" << endl;
+	cout << "createNode: al slave " << slaveid << endl;
+	slavesconn.sendPackToSlave(slaveid, pack);
+}
+
+void MasterConnection::linkRelationship(string pk1, string pk2)
+{
+	string pack = packager.packageLink(pk1, pk2);
+	int slaveid = slavesconn.chooseSlave(pk1);
+	cout << "createNode: envio paquete ["<<pack<<"]" << endl;
+	cout << "createNode: al slave " << slaveid << endl;
+	slavesconn.sendPackToSlave(slaveid, pack);
+	slaveid = slavesconn.nextSlaveid(slaveid);
+	cout << "createNode: envio paquete ["<<pack<<"]" << endl;
+	cout << "createNode: al slave " << slaveid << endl;
+	slavesconn.sendPackToSlave(slaveid, pack);
+}
+
+void MasterConnection::unlinkRelationship(string pk1, string pk2)
+{
+	string pack = packager.packageUnlink(pk1, pk2);
+	int slaveid = slavesconn.chooseSlave(pk1);
+	cout << "createNode: envio paquete ["<<pack<<"]" << endl;
+	cout << "createNode: al slave " << slaveid << endl;
+	slavesconn.sendPackToSlave(slaveid, pack);
+	slaveid = slavesconn.nextSlaveid(slaveid);
+	cout << "createNode: envio paquete ["<<pack<<"]" << endl;
+	cout << "createNode: al slave " << slaveid << endl;
+	slavesconn.sendPackToSlave(slaveid, pack);
+}
+
 bool MasterConnection::existsNodeInSlaves(string pk)
 {
 	string pack = packager.packageExist(pk);
@@ -341,11 +387,8 @@ vector<pair<int,pair<string,string>>> MasterConnection::selectInSlaves(string pk
 	return explored;
 }
 
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 bool MasterConnection::existsNodeHere(string pk)
 {

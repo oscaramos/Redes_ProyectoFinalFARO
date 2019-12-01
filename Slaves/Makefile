@@ -1,4 +1,4 @@
-FLAGS = -std=c++11 -pthread -Wall
+FLAGS = -std=c++17 -pthread -Wall
 AUX_HEADERS = stringhelper.h Safe.h SimulatorUserInput.h
 PEER_HEADERS = PeerConnection.h SenderSocket.h ReceiverSocket.h
 CLIENT_HEADERS = ${PEER_HEADERS} Client.h

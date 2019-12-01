@@ -23,6 +23,8 @@ SELECT("A") 1
 UNLINK("A", "B")
 DELETE("A")
 DELETE("B")
+UPDATE("A", "Z")
+SELECT("Z") 1
 
 
 
@@ -53,4 +55,99 @@ LINK ("D")--("file.F")
 LINK ("D")--("file.G")
 LINK ("E")--("file.K")
 LINK ("E")--("file.L")
+EXPLORE("A") 3
+SELECT("A") 3
+
+
+DELETE("D")
+UNLINK("C")--("E")
 EXPLORE("A") 2
+UPDATE("A", "Z")
+SELECT("Z") 2
+
+// CASO DE PRUEBA DEL PROFE
+CONNECT 127.0.0.1 6666
+CONNECT 127.0.0.1 7777
+CONNECT 127.0.0.1 8888
+CONNECT 127.0.0.1 9999
+START
+CREATE("A", "ABACO")
+CREATE("B", "BASICO")
+CREATE("C", "CLASICO")
+CREATE("D", "DACTILAR")
+CREATE("E", "EXPRESSO")
+CREATE("F", "FANTASTICO")
+CREATE("G", "GRANDIOSO")
+CREATE("H", "HIMPRESIONANTE")
+CREATE("I", "INCREIBLE")
+LINK("A", "B")
+LINK("B", "C")
+LINK("B", "D")
+LINK("D", "E")
+LINK("E", "I")
+LINK("F", "G")
+
+EXPLORE("B", 1)
+EXPLORE("B", 2)
+EXPLORE("B", 3)
+UPDATE("B", "V")
+DELETE("E")
+SELECT("F", 3)
+SELECT("H", 3)
+SELECT("V", 99)
+
+
+/// CASO DE PRUEBA 2
+CONNECT 127.0.0.1 7777
+CONNECT 127.0.0.1 8888
+CONNECT 127.0.0.1 9999
+START
+CREATE("A", "size: 42, files : 68")
+CREATE("B", "size: 35, files : 1")
+CREATE("C", "size: 70, files : 25")
+CREATE("D", "size: 79, files : 59")
+CREATE("E", "size: 63, files : 65")
+CREATE("F", "size: 6, files : 46")
+CREATE("G", "size: 82, files : 28")
+LINK ("A")--("B")
+LINK ("B")--("C")
+LINK ("C")--("D")
+LINK ("D")--("E")
+LINK ("E")--("F")
+LINK ("F")--("G")
+LINK ("G")--("A")
+EXPLORE ("A") 3
+DELETE ("D")
+UNLINK ("E")--("F")
+EXPLORE ("A") 2
+UPDATE ("A", "Z")
+SELECT ("Z") 2
+
+// CASO DE PRUEBA 3
+CONNECT 127.0.0.1 6666
+CONNECT 127.0.0.1 7777
+CONNECT 127.0.0.1 8888
+CONNECT 127.0.0.1 9999
+START
+CREATE("A", "size: 42, files : 68")
+CREATE("B", "size: 35, files : 1")
+CREATE("C", "size: 70, files : 25")
+CREATE("D", "size: 79, files : 59")
+CREATE("E", "size: 63, files : 65")
+LINK ("A")--("B")
+LINK ("A")--("C")
+LINK ("A")--("D")
+LINK ("A")--("E")
+LINK ("B")--("C")
+LINK ("B")--("D")
+LINK ("B")--("E")
+LINK ("C")--("D")
+LINK ("C")--("E")
+LINK ("D")--("E")
+
+EXPLORE ("A") 3
+DELETE ("D")
+UNLINK ("E")--("B")
+EXPLORE ("A") 3
+UPDATE ("A", "Z")
+SELECT ("Z") 3

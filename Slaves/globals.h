@@ -2,8 +2,6 @@
 #define GLOBALS_H
 #include "Database.h"
 #include "Connections/SlaveConnections.h"
-#define DBG(x) cout << #x << " = " << x << endl;
-#define DBGVEC(v) cout << #v << " = "; for(const auto&vv: v) cout << vv << ", "; cout << endl;
 
 enum typeMasterPack{PCKMASTER_START, 
 			        PCKMASTER_CREATE, 
@@ -17,9 +15,14 @@ enum typeMasterPack{PCKMASTER_START,
 			        PCKMASTER_ERROR};
 
 enum typeSlavePack{PCKSLAVE_START,
+				   PCKSLAVE_CREATE,
+				   PCKSLAVE_LINK,
+				   PCKSLAVE_UNLINK,
 				   PCKSLAVE_EXIST,
-				   PCKSLAVE_EXPLORE,
-				   PCKSLAVE_SELECT,
+				   PCKSLAVE_QEXPLORE, // Q = reQuest
+				   PCKSLAVE_QSELECT,
+				   PCKSLAVE_SEXPLORE, // S = reSponse
+				   PCKSLAVE_SSELECT,
 				   PCKSLAVE_TRUE,
 				   PCKSLAVE_FALSE,
                    PCKSLAVE_ERROR};

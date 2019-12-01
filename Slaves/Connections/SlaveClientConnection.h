@@ -2,7 +2,7 @@
 #define SLAVECLIENTCONNECTION_H
 #include <iostream>
 #include <queue>
-#include "../peer/Client.h"
+#include "../peer/PeerConnection.h"
 #include "../Pack/Unpackager.h"
 using namespace std;
 
@@ -40,7 +40,8 @@ public:
 		char packid = receiver.recvChar();
 		cout << "SlaveClientConnection(T|F): packid = " << packid << endl;
 		if(packid == 'T') return true;
-		else return false;
+		else if(packid == 'F') return false;
+		else exit(0);
 	}
 
 	// ejemplo: 4 01 00 03 C:/

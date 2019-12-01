@@ -26,6 +26,28 @@ public:
 		return slaveid;
 	}
 
+	tuple<string,string> unpackageCreate()
+	{
+		receiver.ignore(1); string pk = receiver.recvField(2);
+		receiver.ignore(1); string content = receiver.recvField(3);
+		return make_tuple(pk, content);
+	}
+
+	tuple<string,string> unpackageLink()
+	{
+		receiver.ignore(1); string pk1 = receiver.recvField(2);
+		receiver.ignore(1); string pk2 = receiver.recvField(2);
+		return make_tuple(pk1, pk2);
+	}
+
+	tuple<string,string> unpackageUnlink()
+	{
+		receiver.ignore(1); string pk1 = receiver.recvField(2);
+		receiver.ignore(1); string pk2 = receiver.recvField(2);
+		return make_tuple(pk1, pk2);
+	}
+
+
 	string unpackageExist()
 	{
 		receiver.ignore(1); string pk = receiver.recvField(2);
@@ -76,6 +98,7 @@ public:
 		}
 		return explored;
 	}
+
 
 
 };
