@@ -1,9 +1,9 @@
-# Redes_ProyectoFinal
-Proyecto final del curso de Redes UCSP2019-2
+# Redes Proyecto Final Faro 2019-2
+FARO: FabricioAlonsoRubenOscar
 # Integrantes
 * Oscar Daniel Ramos Ramirez
 * Alonso Valdivia Quispe
-* Fabrizio Flores Pari
+* Fabricio Flores Pari
 * Ruben Cuba Lajo
 
 
