@@ -45,6 +45,7 @@ El server que apunta es el **Master**
 * Este ejemplo es cómo se ejecuta en una máquina, no en varias.
 * Seguir este orden: Master, Cliente, Slave 1 y 2, Cliente.
 * '$' es la terminal de ubuntu(usamos la 18.04)
+
 Terminal **Master**
 ```
 $./master.exe 1111
