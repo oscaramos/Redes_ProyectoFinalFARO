@@ -42,9 +42,9 @@ Este sistema posee las siguientes funcionalidades:
 El server que apunta es el **Master**
 
 # Ejemplo
-* Sobre una sola máquina
-* Seguir estrictamente este orden!
-* '$' es la terminal de linux
+* Este ejemplo es cómo se ejecuta en una máquina, no en varias.
+* Seguir este orden: Master, Cliente, Slave 1 y 2, Cliente.
+* '$' es la terminal de ubuntu(usamos la 18.04)
 Terminal **Master**
 ```
 $./master.exe 1111
@@ -60,14 +60,14 @@ Cliente: conectado a servidor 127.0.0.1 | 1111
 
 Terminal **Slave 1**
 ```
-$./slave.exe 8888 5555
+$./slave.exe 8888 5555 0
 Servidor Abierto!
 Servidor Abierto!
 ```
 
 Terminal **Slave 2**
 ```
-$./slave.exe 9999 5555
+$./slave.exe 9999 5555 1
 Servidor Abierto!
 Servidor Abierto!
 ```
