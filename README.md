@@ -103,7 +103,7 @@ Así que tomé su trabajo, y lo continué con Refactoring. Ejemplos:
 Mientras tanto mi equipo, me conseguía tiempo valioso mediante la postergación de la presentación final por unos dias(pasamos de presentar el Viernes al Lunes). Sin este tiempillo extra nuestro trabajo hubiera sido un total desastre. Tambien me cubrian en otros cursos mientras codeaba en clase(cof cof Compiladores) y me ayudaban a estudiar examenes de los cursos que llevabamos. Les debo muchas gracias por todo esto.
 
 ## Presentación
-En la presentación de este gran proyecto, la metodología fue la siguiente: 
+En la presentación la metodología fue la siguiente: 
 ### Fase 1 (documento)
 El profe pedía código de x funcionalidad dentro del documento, señalaba su ubicación dentro del diagrama de clases, buscabamos la clase y la función y la línea de código exacta que pedía, lo encontrabamos y les explicabamos al profe el cómo funciona ese segmento de código.
 
