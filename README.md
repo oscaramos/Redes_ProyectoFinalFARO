@@ -92,21 +92,20 @@ Haha, noo. A ver... lo que paso fue:
 Al inicio, yo estaba encargado de Master. Ruben y Alonso encargados de los Slaves. Fabricio de las pruebas y la documentación.  
 
 ## Problema
-Pocos dias antes de la presentación ya estaba hecho el Master pero seguía sin terminar los Slaves. Sabía que el código de ellos se había convertido en un *Bloater*(https://sourcemaking.com/refactoring/smells/bloaters), se había vuelto un codigo demasiado grande, poco estructurado(solo funciones), titánico lo diría. Hicieron un buen trabajo, eso sí, pero tenían este problema muy marcado.
+Pocos dias antes de la presentación ya estaba hecho el Master pero seguía sin terminar los Slaves. Sabía que su código se había convertido en un *Bloater*(https://sourcemaking.com/refactoring/smells/bloaters), se había vuelto un codigo demasiado grande, poco estructurado(solo funciones), titánico lo diría. Hicieron un buen trabajo, eso sí, pero tenían este problema muy marcado.
 
 ## Solución
-Así que tomé la decisión de tomar su trabajo de ellos, y continuarlo mediante Refactoring. Ejemplos: 
+Así que tomé su trabajo, y lo continué con Refactoring. Ejemplos: 
 * Transformé sus funciones largas `void crearCliente(); void crearServer()` en clases coherentes `Clase Server, Clase Peer`. 
 * Factorizé sus `write(connectFD, buffer, sizeof buffer)` en `sender.sendStr(msg)`.
 * Simplifique su construcción de paquetes `msg += "1"; msg += " 9 mimensaje"; msg += " 14 midestinatario";` en `msg = join("1", pkgF(mimensaje), pkgF(midestinatario))`.
-* Y mucho más
 
 Mientras tanto mi equipo, me conseguía tiempo valioso mediante la postergación de la presentación final por unos dias(pasamos de presentar el Viernes al Lunes). Sin este tiempillo extra nuestro trabajo hubiera sido un total desastre. Tambien me cubrian en otros cursos mientras codeaba en clase(cof cof Compiladores) y me ayudaban a estudiar examenes de los cursos que llevabamos. Les debo muchas gracias por todo esto.
 
 ## Presentación
 En la presentación de este gran proyecto, la metodología fue la siguiente: 
 ### Fase 1 (documento)
-El profe pedía código de x funcionalidad dentro del documento, yo señalaba su ubicación dentro del diagrama de clases, ellos buscaban la clase y la función y la línea de código exacta que pedía, lo encontraban y yo le explicaba al profe cómo funciona ese segmento de código. Ellos también colaboraban en la explicación.
+El profe pedía código de x funcionalidad dentro del documento, señalaba su ubicación dentro del diagrama de clases, buscabamos la clase y la función y la línea de código exacta que pedía, lo encontrabamos y les explicabamos al profe el cómo funciona ese segmento de código.
 
 ### Fase 2 (pruebas)
 La siguiente fase consiste en hacer la prueba del código: encender nuestras máquinas(mientras más... mejor), hacerle el comando ping entre ellos para verificar que se conecten, correr los programas, insertar los comandos del ejemplo del profe, y mostrarle las salidas al profe. No tenía la parte de que slave muere y sigue corriendo el sistema, sin embargo como arte de mágia funcionó... jajaja.
@@ -117,7 +116,7 @@ La siguiente fase consiste en hacer la prueba del código: encender nuestras má
 * En las pruebas conseguimos A+, debído a la carencia de la funcionalidad del "slave muere y sistema sigue funcionando como si nunca murio". El resto de funcionalidades sí estaban presentes, como el KeepAlive y todas las queries.  
 
 # Conclusiones
-Sin duda fué un trabajo de software enoorme. Hubo buenos resultados pero me demoré demasiado al tomar la decisión de encargarme del código. También debí enseñarles mi framework para que pudiesen implementar todo esto. Consecuencias de esto fué peligrar el resto de cursos, no perdí ninguno pero fué muy riesgoso. 
+Sin duda fué un trabajo de software enoorme. Hubo buenos resultados pero me demoré demasiado al tomar la decisión de encargarme del código. También debí enseñarles mi framework para que pudiesen implementar sin el problema del Bloater. 
 
 # Trabajos futuros
 Tú!!! has de deber continuar este proyecto, pls. Sólo le falta la función de la muerte de slaves.
