@@ -111,10 +111,10 @@ En la presentación la metodología fue la siguiente:
 El profe pedía código de x funcionalidad dentro del documento, señalaba su ubicación dentro del diagrama de clases, buscabamos la clase y la función y la línea de código exacta que pedía, lo encontrabamos y les explicabamos al profe el cómo funciona ese segmento de código.
 
 ### Fase 2 (pruebas)
-La siguiente fase consiste en hacer la prueba del código: encender nuestras máquinas(mientras más... mejor), hacerle el comando ping entre ellos para verificar que se conecten, correr los programas, insertar los comandos del ejemplo del profe, y mostrarle las salidas al profe. No tenía la parte de que slave muere y sigue corriendo el sistema, sin embargo como arte de mágia funcionó... jajaja.
+La siguiente fase consiste en hacer la prueba del código: encender nuestras máquinas, hacerle el comando ping entre ellos para verificar que se conecten, correr los programas, insertar los comandos del ejemplo del profe, y mostrarle las salidas al profe. No teníamos la parte de que slave muere y sigue corriendo el sistema, sin embargo como arte de mágia funcionó... jajaja.
 
 # Resultados
-* En el código conseguímos A++, debído al buen algoritmo de búsqueda mostrada durante la presentación. 
+* En el código conseguímos A++, debído a la buena organización de equipo al presentar el código. 
 * En el documento conseguímos A+, debído al contenido del documento al tener diagramas de todo tipo: casos de uso, protocolo, secuencia, clases y pruebas.
 * En las pruebas conseguimos A+, no fue A++ debído a la carencia de la funcionalidad del "slave muere y sistema sigue funcionando como si nunca murio". El resto de funcionalidades sí estaban presentes, como el KeepAlive y todas las queries.  
 
