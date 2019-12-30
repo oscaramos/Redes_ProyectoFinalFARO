@@ -94,16 +94,14 @@ Al inicio, yo estaba encargado de Master. Ruben y Alonso encargados de los Slave
 En la fase de análisis e ideas todos colaboramos para hacer un protocolo robusto.
 
 ## Problema
-Pocos dias antes de la presentación ya estaba hecho el Master pero seguía sin terminar los Slaves. Sabía que su código se había convertido en un *Bloater*(https://sourcemaking.com/refactoring/smells/bloaters), se había vuelto un codigo demasiado grande, poco estructurado(solo funciones), titánico lo diría. Hicieron un buen trabajo, eso sí, pero tenían este problema muy marcado.
+Pocos dias antes de la presentación ya estaba hecho el Master pero seguía sin terminar los Slaves. Ese código se había convertido en un *Bloater*(https://sourcemaking.com/refactoring/smells/bloaters), se había vuelto un codigo demasiado grande, poco estructurado(solo funciones). Debído a eso se frenó el progreso de los Slaves.
 
 ## Solución
-Así que tomé su trabajo, y lo reestructure completamente con técnicas de refactoring. El código... ya estaba totalmente funcional, solamente le faltaba reestructurarlo para mejorar legibilidad y además agregarle el protocolo interno de los slaves.
+Tomé el proyecto de los Slaves, y lo reestructure completamente con técnicas de refactoring. El código... ya estaba totalmente funcional, solamente le faltaba reestructurarlo para mejorar legibilidad y además agregarle el protocolo interno de los slaves.
 
-Sin embargo, hacer todo esto toma muchisimo tiempo y esfuezo para lograrlo, en circunstancias normales hubiera fallado... 
+Sin embargo, hacer todo esto toma muchisimo tiempo y esfuezo para lograrlo, en circunstancias normales hubiera fallado. Para lograr terminarlo mi equipo conseguía tiempo valioso mediante la postergación de la presentación final por unos dias(pasamos de presentar el Viernes al Lunes). Sin este tiempillo extra nuestro trabajo hubiera sido un total desastre. 
 
-Para lograr terminarlo mi equipo conseguía tiempo valioso mediante la postergación de la presentación final por unos dias(pasamos de presentar el Viernes al Lunes). Sin este tiempillo extra nuestro trabajo hubiera sido un total desastre. 
-
-Tambien me cubrian en otros cursos mientras codeaba en clase(cof cof Compiladores) y me ayudaban a estudiar examenes de los cursos que llevabamos. Les debo muchas gracias por todo esto.
+Tambien me cubrian en otros cursos mientras codeaba en clase(cof cof Compiladores), me ayudaban a estudiar examenes de los cursos que llevabamos. Les debo muchas gracias por todo esto.
 
 ## Presentación
 En la presentación la metodología fue la siguiente: 
@@ -115,14 +113,14 @@ La siguiente fase consiste en hacer la prueba del código: encender nuestras má
 
 # Resultados
 * En el código conseguímos A++, debído a la buena organización de equipo al presentar el código. 
-* En el documento conseguímos A+, debído al contenido del documento al tener diagramas de todo tipo: casos de uso, protocolo, secuencia, clases y pruebas.
-* En las pruebas conseguimos A+, no fue A++ debído a la carencia de la funcionalidad del "slave muere y sistema sigue funcionando como si nunca murio". El resto de funcionalidades sí estaban presentes, como el KeepAlive y todas las queries.  
+* En el documento conseguímos A+, debído al contenido del documento al tener diagramas de todo tipo: casos de uso, protocolo, secuencia, clases y pruebas, no sé porque no sacamos A++.
+* En las pruebas conseguimos A+, no fue A++ debído a la carencia de la funcionalidad del "slave muere y sistema sigue funcionando como si nunca murio". El resto de funcionalidades sí estaban presentes, como el KeepAlive y todas las queries.
 
 # Conclusiones
 Sin duda fué un trabajo de software enoorme. Hubo buenos resultados pero me demoré demasiado al tomar la decisión de encargarme del código. También debí enseñarles mi framework para que pudiesen implementar sin el problema del Bloater. 
 
 # Trabajos futuros
-Tú!!! has de deber continuar este proyecto, pls. Sólo le falta la función de la muerte de slaves.
+Tú!!! has de continuar este proyecto. Sólo le falta la función de la muerte de slaves.
 
 # Preguntas frecuentes
 **Pregunta**: Y los comandos?
