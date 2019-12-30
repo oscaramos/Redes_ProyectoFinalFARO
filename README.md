@@ -86,21 +86,24 @@ Terminal **Cliente**
 
 # Historia
 Oscar hizo todo.
-Haha, noo. A ver... lo que paso fue:
+Haha, noo. A ver... lo que realmente paso fue:
 
 ## Tareas
-Al inicio, yo estaba encargado de Master. Ruben y Alonso encargados de los Slaves. Fabricio de las pruebas y la documentación.  
+Al inicio, yo estaba encargado de Master. Ruben y Alonso encargados de los Slaves. Fabricio de las pruebas y la documentación.
+
+En la fase de análisis e ideas todos colaboramos para hacer un protocolo robusto.
 
 ## Problema
 Pocos dias antes de la presentación ya estaba hecho el Master pero seguía sin terminar los Slaves. Sabía que su código se había convertido en un *Bloater*(https://sourcemaking.com/refactoring/smells/bloaters), se había vuelto un codigo demasiado grande, poco estructurado(solo funciones), titánico lo diría. Hicieron un buen trabajo, eso sí, pero tenían este problema muy marcado.
 
 ## Solución
-Así que tomé su trabajo, y lo continué con Refactoring. Ejemplos: 
-* Transformé sus funciones largas `void crearCliente(); void crearServer()` en clases coherentes `Clase Server, Clase Peer`. 
-* Factorizé sus `write(connectFD, buffer, sizeof buffer)` en `sender.sendStr(msg)`.
-* Simplifique su construcción de paquetes `msg += "1"; msg += " 9 mimensaje"; msg += " 14 midestinatario";` en `msg = join("1", pkgF(mimensaje), pkgF(midestinatario))`.
+Así que tomé su trabajo, y lo reestructure completamente con técnicas de refactoring. El código... ya estaba totalmente funcional, solamente le faltaba reestructurarlo para mejorar legibilidad y además agregarle el protocolo interno de los slaves.
 
-Mientras tanto mi equipo, me conseguía tiempo valioso mediante la postergación de la presentación final por unos dias(pasamos de presentar el Viernes al Lunes). Sin este tiempillo extra nuestro trabajo hubiera sido un total desastre. Tambien me cubrian en otros cursos mientras codeaba en clase(cof cof Compiladores) y me ayudaban a estudiar examenes de los cursos que llevabamos. Les debo muchas gracias por todo esto.
+Sin embargo, hacer todo esto toma muchisimo tiempo y esfuezo para lograrlo, en circunstancias normales hubiera fallado... 
+
+Para lograr terminarlo mi equipo conseguía tiempo valioso mediante la postergación de la presentación final por unos dias(pasamos de presentar el Viernes al Lunes). Sin este tiempillo extra nuestro trabajo hubiera sido un total desastre. 
+
+Tambien me cubrian en otros cursos mientras codeaba en clase(cof cof Compiladores) y me ayudaban a estudiar examenes de los cursos que llevabamos. Les debo muchas gracias por todo esto.
 
 ## Presentación
 En la presentación la metodología fue la siguiente: 
@@ -113,15 +116,13 @@ La siguiente fase consiste en hacer la prueba del código: encender nuestras má
 # Resultados
 * En el código conseguímos A++, debído al buen algoritmo de búsqueda mostrada durante la presentación. 
 * En el documento conseguímos A+, debído al contenido del documento al tener diagramas de todo tipo: casos de uso, protocolo, secuencia, clases y pruebas.
-* En las pruebas conseguimos A+, debído a la carencia de la funcionalidad del "slave muere y sistema sigue funcionando como si nunca murio". El resto de funcionalidades sí estaban presentes, como el KeepAlive y todas las queries.  
+* En las pruebas conseguimos A+, no fue A++ debído a la carencia de la funcionalidad del "slave muere y sistema sigue funcionando como si nunca murio". El resto de funcionalidades sí estaban presentes, como el KeepAlive y todas las queries.  
 
 # Conclusiones
 Sin duda fué un trabajo de software enoorme. Hubo buenos resultados pero me demoré demasiado al tomar la decisión de encargarme del código. También debí enseñarles mi framework para que pudiesen implementar sin el problema del Bloater. 
 
 # Trabajos futuros
 Tú!!! has de deber continuar este proyecto, pls. Sólo le falta la función de la muerte de slaves.
-
-Por nuestro equipo... nos falta camino por recorrer(Seguridad con el mismo profe), esta vez con la falta de Ruben porque ya llevó dicho curso. A ver qué cosas increibles nos aguardaran este próximo curso. Bye. 
 
 # Preguntas frecuentes
 **Pregunta**: Y los comandos?
