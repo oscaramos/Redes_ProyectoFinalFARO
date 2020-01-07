@@ -84,31 +84,13 @@ Terminal **Cliente**
 ...
 ```
 
-# Historia
-Oscar hizo todo.
-Haha, noo. A ver... lo que realmente paso fue:
-
-## Tareas
-Al inicio, yo estaba encargado de Master. Ruben y Alonso encargados de los Slaves. Fabricio de las pruebas y la documentación.
-
-En la fase de análisis e ideas todos colaboramos para hacer un protocolo robusto.
-
-## Problema
-Pocos dias antes de la presentación ya estaba hecho el Master pero seguía sin terminar los Slaves. Ese código se había convertido en un *Bloater*(https://sourcemaking.com/refactoring/smells/bloaters), se había vuelto un codigo demasiado grande, poco estructurado(solo funciones). Debído a eso se frenó el progreso de los Slaves.
-
-## Solución
-Tomé el proyecto de los Slaves, y lo reestructure completamente con técnicas de refactoring. El código... ya estaba totalmente funcional, solamente le faltaba reestructurarlo para mejorar legibilidad y además agregarle el protocolo interno de los slaves.
-
-Sin embargo, hacer todo esto toma muchisimo tiempo y esfuezo para lograrlo, en circunstancias normales hubiera fallado. Para lograr terminarlo mi equipo conseguía tiempo valioso mediante la postergación de la presentación final por unos dias(pasamos de presentar el Viernes al Lunes). Sin este tiempillo extra nuestro trabajo hubiera sido un total desastre. 
-
-Tambien me cubrian en otros cursos mientras codeaba en clase(cof cof Compiladores), me ayudaban a estudiar examenes de los cursos que llevabamos. Les debo muchas gracias por todo esto.
-
-## Presentación
+# Presentación
 En la presentación la metodología fue la siguiente: 
-### Fase 1 (documento)
+
+## Fase 1 (documento)
 El profe pedía código de x funcionalidad dentro del documento, señalaba su ubicación dentro del diagrama de clases, buscabamos la clase y la función y la línea de código exacta que pedía, lo encontrabamos y les explicabamos al profe el cómo funciona ese segmento de código.
 
-### Fase 2 (pruebas)
+## Fase 2 (pruebas)
 La siguiente fase consiste en hacer la prueba del código: encender nuestras máquinas, hacerle el comando ping entre ellos para verificar que se conecten, correr los programas, insertar los comandos del ejemplo del profe, y mostrarle las salidas al profe. No teníamos la parte de que slave muere y sigue corriendo el sistema, sin embargo como arte de mágia funcionó... jajaja.
 
 # Resultados
@@ -121,22 +103,3 @@ Sin duda fué un trabajo de software enoorme. Hubo buenos resultados pero me dem
 
 # Trabajos futuros
 Tú!!! has de continuar este proyecto. Sólo le falta la función de la muerte de slaves.
-
-# Preguntas frecuentes
-**Pregunta**: Y los comandos?
-
-**Respuesta**: Lee la doc
-
-**Pregunta**: Y la info?
-
-**Respuesta**: Lee la doc
-
-**Pregunta**: Y las pruebas?
-
-**Respuesta**: Lee la doc
-
-**Pregunta**: Y l...?
-
-**Respuesta**: Lee la doc
-
-doc = documentación
